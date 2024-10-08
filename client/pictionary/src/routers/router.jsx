@@ -3,7 +3,7 @@ import MainPage from "../views/MainPage";
 import AvatarPage from "../views/AvatarPage";
 import FinalPage from "../views/FinalPage";
 import GamePage from "../views/GamePage";
-import Lobby from "../../../../../draw-guesser/client/src/pages/Lobby";
+import LobbyPage from "../views/LobbyPage";
 
 const router = createBrowserRouter([
   {
@@ -24,7 +24,7 @@ const router = createBrowserRouter([
   },
   {
     path: "/lobby",
-    element: <Lobby />,
+    element: <LobbyPage />,
   },
 ]);
 
