@@ -14,7 +14,9 @@ export default function LobbyPage() {
       >
         <div className="flex flex-col items-center gap-y-2 mb-4">
           <img src={Banner} alt="" width={600} className="mt-[50px]" />
-          <p className="font-black text-white text-xl">DRAW, GUESS, WIN</p>
+          <p className="font-black rounded-xl bg-orange-950 p-2 text-white text-xl">
+            Manifest Your Creativity
+          </p>
         </div>
         <div className="flex flex-col items-center w-[60%] relative pt-4">
           <h1 className="font-bold absolute top-0 bg-[#FFBF1F] border-2 rounded-full px-4 py-2 border-[#431407] text-sm">

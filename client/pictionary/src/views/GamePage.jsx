@@ -22,7 +22,9 @@ export default function GamePage() {
         <div className="flex flex-col items-center gap-y-2 w-[440px] h-full p-4">
           <div className="flex flex-col items-center gap-y-2 mb-8">
             <img src={Banner} alt="" width={300} />
-            <p className="font-black text-white text-xs">DRAW, GUESS, WIN</p>
+            <p className="font-black rounded-xl bg-orange-950 p-2 text-white text-xl">
+              Manifest Your Creativity
+            </p>
           </div>
           <DrawingBoard />
           <Timer />
