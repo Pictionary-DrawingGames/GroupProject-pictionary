@@ -11,13 +11,17 @@ function App() {
   const [join, setJoin] = useState(false);
   const [startGame, setStartGame] = useState(false);
 
-  return (
-    <SocketProvider>
-      {" "}
-      {/* Bungkus semua komponen dengan SocketProvider */}
-      {join ? <LobbyPage setStartGame={setStartGame} setJoin={setJoin} /> : startGame ? <GamePage /> : <MainPage username={username} setUsername={setUsername} setJoin={setJoin} />}
-    </SocketProvider>
-  );
+  let pageToRender;
+
+  if (join) {
+    pageToRender = <LobbyPage setStartGame={setStartGame} setJoin={setJoin} />;
+  } else if (startGame) {
+    pageToRender = <GamePage />;
+  } else {
+    pageToRender = <MainPage username={username} setUsername={setUsername} setJoin={setJoin} />;
+  }
+
+  return <SocketProvider>{pageToRender}</SocketProvider>;
 }
 
 export default App;

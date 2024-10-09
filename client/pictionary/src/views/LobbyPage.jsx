@@ -11,34 +11,29 @@ export default function LobbyPage({ setStartGame, setJoin }) {
   // Handle incoming socket data
   useEffect(() => {
     if (!socketData) return;
-    console.log("Socket Data Received:", socketData);
     const { action, payload } = socketData;
+    console.log(socketData);
 
-    switch (action) {
-      case "join":
-      case "ready":
-      case "leave":
-        setPlayers(payload.players);
-        logPlayerReadiness(payload.players); // Log pemain yang sudah ready
-        break;
-      case "play":
-        setIsPlaying(true);
-        setTimeout(() => {
-          setJoin(false);
-          setStartGame(true);
-        }, 1000);
-        break;
-      default:
-        break;
+    if (action === "join") {
+      setPlayers(payload.players);
+    }
+
+    if (action === "ready") {
+      setPlayers(payload.players);
+    }
+
+    if (action === "play") {
+      setIsPlaying(true);
+      setTimeout(() => {
+        setJoin(false);
+        setStartGame(true);
+      }, 1000);
+    }
+
+    if (action === "leave") {
+      setPlayers(payload.players);
     }
   }, [socketData]);
-
-  const logPlayerReadiness = players => {
-    console.log("Status Pemain yang Siap:");
-    Object.keys(players).forEach(playerId => {
-      console.log(`${players[playerId].name} - Ready: ${players[playerId].ready}`);
-    });
-  };
 
   console.log("Players in LobbyPage:", players);
 
@@ -50,11 +45,7 @@ export default function LobbyPage({ setStartGame, setJoin }) {
     };
 
     sendData(data);
-    setIsReady(prev => {
-      const newReadyState = !prev; // Toggle isReady state
-      console.log(`Player ${newReadyState ? "is now ready." : "is no longer ready."}`);
-      return newReadyState;
-    });
+    setIsReady(true);
   };
 
   return (

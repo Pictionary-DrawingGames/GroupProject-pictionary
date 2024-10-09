@@ -20,15 +20,23 @@ export const SocketProvider = ({ children, setEndGame }) => {
       console.log("Connected to the server");
     });
 
+    newSocket.on("join", data => {
+      if (data.payload) {
+        setPlayers(data.payload.players);
+        setSocketData(data); // Set structured socket data
+      }
+    });
+
     newSocket.on("get_id", data => {
       setUserId(data.payload.id);
+      setSocketData(data); // Set structured socket data
     });
 
     newSocket.on("next", data => {
       if (data.payload) {
-        // Pastikan payload ada
         setDrawer(data.payload.drawer);
         setPlayers(data.payload.players);
+        setSocketData(data); // Set structured socket data
       } else {
         console.error("Payload is null or undefined for 'next' event:", data);
       }
@@ -36,25 +44,27 @@ export const SocketProvider = ({ children, setEndGame }) => {
 
     newSocket.on("set_word", data => {
       if (data.payload) {
-        // Pastikan payload ada
         setWord(data.payload.word);
+        setSocketData(data); // Set structured socket data
       } else {
         console.error("Payload is null or undefined for 'set_word' event:", data);
       }
     });
 
-    newSocket.on("join", data => {
-      setPlayers(data.payload.players);
-    });
-
     newSocket.on("score", data => {
-      setPlayers(data.payload.players);
+      if (data.payload) {
+        setPlayers(data.payload.players);
+        setSocketData(data); // Set structured socket data
+      }
     });
 
     newSocket.on("end", data => {
-      setEndGame(true);
-      setPlayers(data.payload.players);
-      setEnd(true);
+      if (data.payload) {
+        setEndGame(true);
+        setPlayers(data.payload.players);
+        setEnd(true);
+        setSocketData(data); // Set structured socket data
+      }
     });
 
     newSocket.on("disconnect", () => {
@@ -89,5 +99,23 @@ export const SocketProvider = ({ children, setEndGame }) => {
     }
   };
 
-  return <SocketContext.Provider value={{ socket, socketData, userId, players, drawer, word, end, setWord, setPlayers, sendData, connectToServer }}>{children}</SocketContext.Provider>;
+  return (
+    <SocketContext.Provider
+      value={{
+        socket,
+        socketData,
+        userId,
+        players,
+        drawer,
+        word,
+        end,
+        setWord,
+        setPlayers,
+        sendData,
+        connectToServer,
+      }}
+    >
+      {children}
+    </SocketContext.Provider>
+  );
 };
