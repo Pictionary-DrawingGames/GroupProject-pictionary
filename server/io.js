@@ -98,10 +98,28 @@ io.on("connection", socket => {
     io.emit("next", { players: players, drawer: players[Object.keys(players)[drawerIndex]] });
   });
 
+
   // mengatur kata
   socket.on("set_word", payload => {
     io.emit("set_word", { word: payload.word });
   });
+
+  // Event 'join'
+  socket.on("player", data => {
+    // Menyimpan pemain dengan data yang diterima dari client
+    players[socket.id] = {
+      id: socket.id,
+      name: data.payload.name,  // Nama dari localStorage
+      avatar: data.payload.avatar,  // Avatar dari localStorage
+      score: parseInt(data.payload.score, 10),  // Skor dari localStorage
+      ready: false,
+      correct: false,
+    };
+
+    // Emit pemain yang sudah bergabung kepada semua klien
+    io.emit("updatePlayers", players);
+  });
+
 
   // pesan dari pemain (baru)
   // socket.on("message", payload => {
@@ -120,13 +138,13 @@ io.on("connection", socket => {
   // pemain disconnect
   socket.on("disconnect", () => {
     console.log("A client has disconnected.");
-    removePlayer(socket, id);
+    removePlayer(socket, socket.id);
   });
 
   socket.on("message:new", ({ answer, currentWord }) => {
-
     let message = answer;
     let correct = false;
+
 
     // Logika untuk memeriksa apakah jawaban benar
     if (answer == currentWord) {
