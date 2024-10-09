@@ -40,7 +40,9 @@ export default function MainPage({ username, setUsername, setJoin }) {
     >
       <div className="flex flex-col items-center gap-y-2 mb-4">
         <img src={Banner} alt="" width={600} className="mt-[50px]" />
-        <p className="font-black text-white text-xl">DRAW, GUESS, WIN</p>
+        <p className="font-black rounded-xl bg-orange-950 p-2 text-white text-lg md:text-xl text-center">
+          Manifest Your Creativity
+        </p>
       </div>
 
       {viewAvatars ? (
