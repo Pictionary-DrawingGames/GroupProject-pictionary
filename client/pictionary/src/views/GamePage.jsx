@@ -13,6 +13,7 @@ export default function GamePage({ socket }) {
   // const [timerIsActive, setTimerIsActive] = useState(false);
   const [seconds, setSeconds] = useState(30);
   const [currentWord, setCurrentWord] = useState("");
+  const [players, setPlayers] = useState({});
 
   const words = [
     "apple",
@@ -118,6 +119,19 @@ export default function GamePage({ socket }) {
   }, []);
 
   useEffect(() => {
+    // Update players data from the server
+    socket.on("updatePlayers", playersData => {
+      setPlayers(playersData);
+      console.log("Pemain yang diterima dari server: ", playersData);
+    });
+
+    // Clean up the event listener when component unmounts
+    return () => {
+      socket.off("updatePlayers");
+    };
+  }, [socket]);
+
+  useEffect(() => {
     if (seconds === 0) {
       setSeconds(30);
       setCurrentWord(randomWord);
@@ -126,6 +140,11 @@ export default function GamePage({ socket }) {
       socket.emit("word:chosen", randomWord);
     }
   }, [socket, words, seconds]);
+
+  useEffect(() => {
+    socket.emit("players", players);
+    console.log("Current players state: ", players); // Log current players state
+  }, [players]);
 
   return (
     <>
@@ -136,21 +155,15 @@ export default function GamePage({ socket }) {
           backgroundColor: "#f97316",
         }}
       >
-        <Players />
+        <Players socket={socket} players={players} />
         <div className="flex flex-col items-center gap-y-2 w-full lg:w-[440px] h-full p-4">
           <div className="flex flex-col items-center gap-y-2 mb-8">
             <img src={Banner} alt="" className="w-[200px] md:w-[300px]" />
-            <p className="font-black rounded-xl bg-orange-950 p-2 text-white text-lg md:text-xl text-center">
-              Manifest Your Creativity
-            </p>
+            <p className="font-black rounded-xl bg-orange-950 p-2 text-white text-lg md:text-xl text-center">Manifest Your Creativity</p>
           </div>
           <div className="flex flex-col md:flex-row">
             <div className="mt-4 md:mt-0">
-              <DrawingBoard
-                socket={socket}
-                seconds={seconds}
-                setSeconds={setSeconds}
-              />
+              <DrawingBoard socket={socket} seconds={seconds} setSeconds={setSeconds} />
             </div>
             {/* <div className="text-center mr-0 md:mr-1 mt-5">
               <Timer
@@ -161,7 +174,7 @@ export default function GamePage({ socket }) {
             </div> */}
           </div>
         </div>
-        <Chat socket={socket} />
+        <Chat socket={socket} players={players} />
       </div>
     </>
   );

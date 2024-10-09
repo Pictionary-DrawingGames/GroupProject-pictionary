@@ -1,39 +1,61 @@
 import { useEffect, useState } from "react";
 import ChatLabel from "../assets/chat.png";
 
-export default function Chat({ socket }) {
+export default function Chat({ socket, players }) {
   const [answer, setAnswer] = useState("");
   const [messages, setMessages] = useState([]);
   const [currentWord, setCurrentWord] = useState("");
+  const [hasAnsweredCorrectly, setHasAnsweredCorrectly] = useState(false);
+  const [score, setScore] = useState(() => {
+    const savedScore = localStorage.getItem("userScore");
+    return savedScore ? parseInt(savedScore, 10) : 0;
+  });
+
+  // Mendengarkan perubahan kata dari server
+  useEffect(() => {
+    socket.on("word:update", (word) => {
+      setCurrentWord(word);
+      setHasAnsweredCorrectly(false);
+    });
+
+    return () => {
+      socket.off("word:update");
+    };
+  }, [socket]);
 
   const handleSendMessage = (event) => {
     event.preventDefault();
-    socket.emit("message:new", answer);
+    socket.emit("message:new", { answer, currentWord });
     setAnswer("");
   };
 
   useEffect(() => {
-    // ngeset auth buat socketnya
     socket.auth = {
       username: localStorage.getItem("username"),
       score: localStorage.getItem("userScore"),
       avatar: localStorage.getItem("useravatar"),
     };
 
-    // kenapa butuh connect manual? supaya bisa set auth dlu sblm connect
     socket.connect();
 
     socket.on("message:update", (newMessage) => {
-      setMessages((current) => {
-        return [...current, newMessage];
-      });
+      setMessages((current) => [...current, newMessage]);
+
+      if (newMessage.correct && !hasAnsweredCorrectly) {
+        setScore((prevScore) => prevScore + 20);
+        setHasAnsweredCorrectly(true);
+      }
     });
 
     return () => {
       socket.off("message:update");
       socket.disconnect();
     };
-  }, []);
+  }, [socket, hasAnsweredCorrectly]);
+
+  useEffect(() => {
+    localStorage.setItem("userScore", score);
+  }, [score]);
 
   return (
     <>
@@ -46,10 +68,20 @@ export default function Chat({ socket }) {
           />
           <div className="chat-messages w-full border h-full mb-16 md:h-[500px] rounded-lg p-2 overflow-y-scroll">
             {messages.map((msg, index) => (
-              <p key={index}>
-                <strong>{msg.username} : </strong>
-                {msg.message}
-              </p>
+              <div
+                key={index}
+                className={`flex items-center gap-x-2 ${
+                  msg.correct ? "text-green-600" : "text-black"
+                }`}
+              >
+                {msg.correct ? (
+                  <p className="font-bold">{msg.username} guessed the word!</p>
+                ) : (
+                  <p>
+                    <strong>{msg.username}</strong>: {msg.message}
+                  </p>
+                )}
+              </div>
             ))}
           </div>
           <div className="absolute bottom-1 p-4 w-full">

@@ -20,31 +20,54 @@ export const SocketProvider = ({ children, setEndGame }) => {
       console.log("Connected to the server");
     });
 
+    newSocket.on("join", (data) => {
+      if (data.payload) {
+        setPlayers(data.payload.players);
+        setSocketData(data); // Set structured socket data
+      }
+    });
+
     newSocket.on("get_id", (data) => {
       setUserId(data.payload.id);
+      setSocketData(data); // Set structured socket data
     });
 
     newSocket.on("next", (data) => {
-      setDrawer(data.payload.drawer);
-      setPlayers(data.payload.players);
+      if (data.payload) {
+        setDrawer(data.payload.drawer);
+        setPlayers(data.payload.players);
+        setSocketData(data); // Set structured socket data
+      } else {
+        console.error("Payload is null or undefined for 'next' event:", data);
+      }
     });
 
     newSocket.on("set_word", (data) => {
-      setWord(data.payload.word);
-    });
-
-    newSocket.on("join", (data) => {
-      setPlayers(data.payload.players);
+      if (data.payload) {
+        setWord(data.payload.word);
+        setSocketData(data); // Set structured socket data
+      } else {
+        console.error(
+          "Payload is null or undefined for 'set_word' event:",
+          data
+        );
+      }
     });
 
     newSocket.on("score", (data) => {
-      setPlayers(data.payload.players);
+      if (data.payload) {
+        setPlayers(data.payload.players);
+        setSocketData(data); // Set structured socket data
+      }
     });
 
     newSocket.on("end", (data) => {
-      setEndGame(true);
-      setPlayers(data.payload.players);
-      setEnd(true);
+      if (data.payload) {
+        setEndGame(true);
+        setPlayers(data.payload.players);
+        setEnd(true);
+        setSocketData(data); // Set structured socket data
+      }
     });
 
     newSocket.on("disconnect", () => {
