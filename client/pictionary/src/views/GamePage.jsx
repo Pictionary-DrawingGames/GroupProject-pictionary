@@ -130,31 +130,35 @@ export default function GamePage({ socket }) {
   return (
     <>
       <div
-        className="flex items-center justify-between h-screen"
+        className="flex flex-col lg:flex-row items-center lg:items-start justify-between"
         style={{
           backgroundImage: `url(${Background})`,
           backgroundColor: "#f97316",
         }}
       >
         <Players />
-        <div className="flex flex-col items-center gap-y-2 w-[440px] h-full p-4">
+        <div className="flex flex-col items-center gap-y-2 w-full lg:w-[440px] h-full p-4">
           <div className="flex flex-col items-center gap-y-2 mb-8">
-            <img src={Banner} alt="" width={300} />
-            <p className="font-black rounded-xl bg-orange-950 p-2 text-white text-xl">
+            <img src={Banner} alt="" className="w-[200px] md:w-[300px]" />
+            <p className="font-black rounded-xl bg-orange-950 p-2 text-white text-lg md:text-xl text-center">
               Manifest Your Creativity
             </p>
           </div>
-          <div className="flex item-center">
-            <div className="text-center mr-1 mt-5">
-              <Timer
+          <div className="flex flex-col md:flex-row">
+            <div className="mt-4 md:mt-0">
+              <DrawingBoard
                 socket={socket}
                 seconds={seconds}
                 setSeconds={setSeconds}
               />
             </div>
-            <div>
-              <DrawingBoard socket={socket} />
-            </div>
+            {/* <div className="text-center mr-0 md:mr-1 mt-5">
+              <Timer
+                socket={socket}
+                seconds={seconds}
+                setSeconds={setSeconds}
+              />
+            </div> */}
           </div>
         </div>
         <Chat socket={socket} />

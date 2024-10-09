@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
+import Timer from "../components/Timer";
 
-export default function DrawingBoard({ socket }) {
+export default function DrawingBoard({ socket, seconds, setSeconds }) {
   const canvasRef = useRef(null);
   const contextRef = useRef(null);
   const isDrawing = useRef(false);
@@ -130,9 +131,9 @@ export default function DrawingBoard({ socket }) {
   return (
     <>
       <div className="flex flex-col items-center relative pt-4">
-        <div className="flex justify-between">
+        <div className="flex flex-col md:flex-row justify-between">
           <div className="flex justify-center">
-            <p className="absolute top-10">
+            <p className="absolute top-10 text-sm md:text-base">
               {currentWord && currentWord.toUpperCase()}
             </p>
             <h1 className="font-bold absolute top-0 bg-[#FFBF1F] border-2 rounded-full px-4 py-1 border-[#431407] text-xs">
@@ -140,20 +141,28 @@ export default function DrawingBoard({ socket }) {
             </h1>
             <canvas
               id="gameCanvas"
-              width={400}
-              height={400}
+              width={300}
+              height={300}
               ref={canvasRef}
-              className="bg-white rounded-lg border-2 border-[#431407]"
+              className="bg-white rounded-lg border-2 border-[#431407] md:w-[400px] md:h-[400px]"
             ></canvas>
           </div>
-
-          <div className="drop-shadow-xl">
-            <button
-              onClick={handleClearCanvasClick}
-              className="ml-1 mt-1 border border-black bg-white text-black px-4 py-2 rounded-lg"
-            >
-              Clear
-            </button>
+          <div>
+            <div className="flex justify-center drop-shadow-xl mt-2 md:mt-1">
+              <button
+                onClick={handleClearCanvasClick}
+                className="ml-1 mt-1 border border-black bg-white text-black px-4 py-2 rounded-lg"
+              >
+                Clear
+              </button>
+            </div>
+            <div className="text-center mr-0 md:mr-1 mt-3 ml-1">
+              <Timer
+                socket={socket}
+                seconds={seconds}
+                setSeconds={setSeconds}
+              />
+            </div>
           </div>
         </div>
       </div>
