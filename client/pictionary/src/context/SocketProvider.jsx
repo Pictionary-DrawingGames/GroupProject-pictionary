@@ -20,38 +20,28 @@ export const SocketProvider = ({ children, setEndGame }) => {
       console.log("Connected to the server");
     });
 
-    newSocket.on("get_id", data => {
+    newSocket.on("get_id", (data) => {
       setUserId(data.payload.id);
     });
 
-    newSocket.on("next", data => {
-      if (data.payload) {
-        // Pastikan payload ada
-        setDrawer(data.payload.drawer);
-        setPlayers(data.payload.players);
-      } else {
-        console.error("Payload is null or undefined for 'next' event:", data);
-      }
-    });
-
-    newSocket.on("set_word", data => {
-      if (data.payload) {
-        // Pastikan payload ada
-        setWord(data.payload.word);
-      } else {
-        console.error("Payload is null or undefined for 'set_word' event:", data);
-      }
-    });
-
-    newSocket.on("join", data => {
+    newSocket.on("next", (data) => {
+      setDrawer(data.payload.drawer);
       setPlayers(data.payload.players);
     });
 
-    newSocket.on("score", data => {
+    newSocket.on("set_word", (data) => {
+      setWord(data.payload.word);
+    });
+
+    newSocket.on("join", (data) => {
       setPlayers(data.payload.players);
     });
 
-    newSocket.on("end", data => {
+    newSocket.on("score", (data) => {
+      setPlayers(data.payload.players);
+    });
+
+    newSocket.on("end", (data) => {
       setEndGame(true);
       setPlayers(data.payload.players);
       setEnd(true);
@@ -61,7 +51,7 @@ export const SocketProvider = ({ children, setEndGame }) => {
       console.log("Disconnected from the server");
     });
 
-    newSocket.on("error", err => {
+    newSocket.on("error", (err) => {
       console.error("Socket error:", err);
     });
 
@@ -80,14 +70,29 @@ export const SocketProvider = ({ children, setEndGame }) => {
   }, [setEndGame]);
 
   // Mengirim data ke server menggunakan socket.io
-  const sendData = data => {
-    if (socket && data && data.action) {
-      // Emit sesuai action
-      socket.emit(data.action, data);
-    } else {
-      console.error("Data atau socket tidak valid untuk dikirim.");
+  const sendData = (data) => {
+    if (socket) {
+      socket.emit("join", data);
     }
   };
 
-  return <SocketContext.Provider value={{ socket, socketData, userId, players, drawer, word, end, setWord, setPlayers, sendData, connectToServer }}>{children}</SocketContext.Provider>;
+  return (
+    <SocketContext.Provider
+      value={{
+        socket,
+        socketData,
+        userId,
+        players,
+        drawer,
+        word,
+        end,
+        setWord,
+        setPlayers,
+        sendData,
+        connectToServer,
+      }}
+    >
+      {children}
+    </SocketContext.Provider>
+  );
 };
