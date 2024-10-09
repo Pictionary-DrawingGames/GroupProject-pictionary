@@ -18,13 +18,15 @@ const io = new Server(server, {
   },
 });
 
-io.on("connection", socket => {
+io.on("connection", (socket) => {
   const id = uuidv4();
   console.log("A client has connected.");
 
   // join
-  socket.on("join", payload => {
+  socket.on("join", (payload) => {
     const { name, avatar } = payload;
+    console.log(payload);
+
     players[id] = {
       id: id,
       name: name,
@@ -35,7 +37,10 @@ io.on("connection", socket => {
     };
 
     console.log("Players after join:", players);
-    socket.broadcast.emit("join", { action: "join", payload: { players: players } });
+    socket.broadcast.emit("join", {
+      action: "join",
+      payload: { players: players },
+    });
     socket.emit("get_id", { action: "get_id", payload: { id: id } });
   });
 
@@ -46,7 +51,10 @@ io.on("connection", socket => {
 
     if (allPlayersReady()) {
       io.emit("play", { players: players });
-      io.emit("next", { players: players, drawer: players[Object.keys(players)[drawerIndex]] });
+      io.emit("next", {
+        players: players,
+        drawer: players[Object.keys(players)[drawerIndex]],
+      });
       status = "playing";
     }
   });
@@ -57,7 +65,9 @@ io.on("connection", socket => {
     rounds += 1;
 
     if (rounds == Object.keys(players).length) {
-      players = Object.fromEntries(Object.entries(players).sort((a, b) => b[1].score - a[1].score));
+      players = Object.fromEntries(
+        Object.entries(players).sort((a, b) => b[1].score - a[1].score)
+      );
       io.emit("end", { players: players });
       status = "waiting";
       rounds = 0;
@@ -69,20 +79,24 @@ io.on("connection", socket => {
     }
 
     drawerIndex = (drawerIndex + 1) % Object.keys(players).length;
-    io.emit("next", { players: players, drawer: players[Object.keys(players)[drawerIndex]] });
+    io.emit("next", {
+      players: players,
+      drawer: players[Object.keys(players)[drawerIndex]],
+    });
   });
 
   // mengatur kata
-  socket.on("set_word", payload => {
+  socket.on("set_word", (payload) => {
     io.emit("set_word", { word: payload.word });
   });
 
   // pesan dari pemain
-  socket.on("message", payload => {
+  socket.on("message", (payload) => {
     const { correct, drawerId, timeGuessed } = payload;
     if (correct) {
       players[id].correct = true;
-      players[id].score += (Object.keys(players).length - gotCorrect - 1) * 10 + timeGuessed;
+      players[id].score +=
+        (Object.keys(players).length - gotCorrect - 1) * 10 + timeGuessed;
       players[drawerId].score += 10;
       gotCorrect += 1;
       io.emit("score", { players: players });
@@ -110,7 +124,7 @@ io.on("connection", socket => {
 
 // cek semua pemain ready
 function allPlayersReady() {
-  return Object.values(players).every(player => player.ready);
+  return Object.values(players).every((player) => player.ready);
 }
 
 // hapus pemain jika disconnect

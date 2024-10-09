@@ -7,7 +7,7 @@ import { Avatars } from "../lib/utils"; // Pastikan path ini sesuai dengan struk
 // import AvatarSelection from "./AvatarSelection"; // Pastikan Anda memiliki komponen AvatarSelection
 
 export default function MainPage({ username, setUsername, setJoin }) {
-  const { socket, sendData, connectToServer } = useContext(SocketContext);
+  const { sendData, connectToServer } = useContext(SocketContext);
   const [viewAvatars, setViewAvatars] = useState(false);
   const [selectedAvatar, setSelectedAvatar] = useState(0); // Avatar yang dipilih
 
@@ -44,17 +44,44 @@ export default function MainPage({ username, setUsername, setJoin }) {
 
       {viewAvatars ? (
         // Menampilkan komponen AvatarSelection jika viewAvatars true
-        <AvatarSelection selectedAvatar={selectedAvatar} setSelectedAvatar={setSelectedAvatar} setViewAvatars={setViewAvatars} />
+        <AvatarSelection
+          selectedAvatar={selectedAvatar}
+          setSelectedAvatar={setSelectedAvatar}
+          setViewAvatars={setViewAvatars}
+        />
       ) : (
         <div className="flex flex-col items-center p-6 relative pt-4">
-          <h1 className="font-bold absolute top-0 bg-[#FFBF1F] border-2 rounded-full px-4 py-2 border-[#431407] text-sm">QUICK PLAY</h1>
+          <h1 className="font-bold absolute top-0 bg-[#FFBF1F] border-2 rounded-full px-4 py-2 border-[#431407] text-sm">
+            QUICK PLAY
+          </h1>
           <div className="flex flex-col items-center gap-y-4 bg-white border-2 border-[#431407] rounded-lg p-8">
-            <div className="relative flex items-center justify-center pb-3 cursor-pointer" onClick={() => setViewAvatars(true)}>
-              <img src={Avatars[selectedAvatar]} alt="avatar" width={100} className="absolute mb-1.5" />
-              <div className={`border-4 border-orange-500 rounded-full w-[110px] h-[110px] mt-5`}></div>
-              <p className={`font-bold bg-orange-500 rounded-full px-2 py-1 text-white absolute bottom-0 text-sm whitespace-nowrap`}>Change Avatar</p>
+            <div
+              className="relative flex items-center justify-center pb-3 cursor-pointer"
+              onClick={() => setViewAvatars(true)}
+            >
+              <img
+                src={Avatars[selectedAvatar]}
+                alt="avatar"
+                width={100}
+                className="absolute mb-1.5"
+              />
+              <div
+                className={`border-4 border-orange-500 rounded-full w-[110px] h-[110px] mt-5`}
+              ></div>
+              <p
+                className={`font-bold bg-orange-500 rounded-full px-2 py-1 text-white absolute bottom-0 text-sm whitespace-nowrap`}
+              >
+                Change Avatar
+              </p>
             </div>
-            <input maxLength="10" className="w-48 p-2 text-center border-2 rounded-lg" type="text" value={username} placeholder="Enter your nickname" onChange={e => setUsername(e.target.value)} />
+            <input
+              maxLength="10"
+              className="w-48 p-2 text-center border-2 rounded-lg"
+              type="text"
+              value={username}
+              placeholder="Enter your nickname"
+              onChange={(e) => setUsername(e.target.value)}
+            />
             <button
               disabled={username.length === 0} // Menonaktifkan tombol jika username kosong
               onClick={handleJoin}
