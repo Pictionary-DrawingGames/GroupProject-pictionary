@@ -24,38 +24,47 @@ io.on("connection", (socket) => {
 
   // join
   socket.on("join", (payload) => {
-    const { name, avatar } = payload;
-    console.log(payload);
+    // Pastikan payload dan payload.payload tidak null atau undefined
+    if (payload && payload.payload) {
+      const { name, avatar } = payload.payload;
 
-    players[id] = {
-      id: id,
-      name: name,
-      avatar: avatar,
-      score: 0,
-      ready: false,
-      correct: false,
-    };
+      players[id] = {
+        id: id,
+        name: name,
+        avatar: avatar,
+        score: 0,
+        ready: false,
+        correct: false,
+      };
 
-    console.log("Players after join:", players);
-    socket.broadcast.emit("join", {
-      action: "join",
-      payload: { players: players },
-    });
-    socket.emit("get_id", { action: "get_id", payload: { id: id } });
+      console.log("Players after join:", players);
+      socket.broadcast.emit("join", {
+        action: "join",
+        payload: { players: players },
+      });
+      socket.emit("get_id", { action: "get_id", payload: { id: id } });
+    }
   });
 
   // player ready
   socket.on("ready", () => {
-    players[id].ready = true;
-    io.emit("ready", { players: players });
-
-    if (allPlayersReady()) {
-      io.emit("play", { players: players });
-      io.emit("next", {
-        players: players,
-        drawer: players[Object.keys(players)[drawerIndex]],
+    if (players[id]) {
+      players[id].ready = true;
+      socket.broadcast.emit("ready", {
+        action: "ready",
+        payload: { players: players },
       });
-      status = "playing";
+
+      if (allPlayersReady()) {
+        io.emit("play", { players: players });
+        io.emit("next", {
+          players: players,
+          drawer: players[Object.keys(players)[drawerIndex]],
+        });
+        status = "playing";
+      }
+    } else {
+      console.error("Player not found for 'ready' event:", id);
     }
   });
 

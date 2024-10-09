@@ -25,12 +25,22 @@ export const SocketProvider = ({ children, setEndGame }) => {
     });
 
     newSocket.on("next", data => {
-      setDrawer(data.payload.drawer);
-      setPlayers(data.payload.players);
+      if (data.payload) {
+        // Pastikan payload ada
+        setDrawer(data.payload.drawer);
+        setPlayers(data.payload.players);
+      } else {
+        console.error("Payload is null or undefined for 'next' event:", data);
+      }
     });
 
     newSocket.on("set_word", data => {
-      setWord(data.payload.word);
+      if (data.payload) {
+        // Pastikan payload ada
+        setWord(data.payload.word);
+      } else {
+        console.error("Payload is null or undefined for 'set_word' event:", data);
+      }
     });
 
     newSocket.on("join", data => {
@@ -71,8 +81,11 @@ export const SocketProvider = ({ children, setEndGame }) => {
 
   // Mengirim data ke server menggunakan socket.io
   const sendData = data => {
-    if (socket) {
-      socket.emit("join", data);
+    if (socket && data && data.action) {
+      // Emit sesuai action
+      socket.emit(data.action, data);
+    } else {
+      console.error("Data atau socket tidak valid untuk dikirim.");
     }
   };
 
