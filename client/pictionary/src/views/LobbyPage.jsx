@@ -31,7 +31,7 @@ export default function LobbyPage({ setStartGame, setJoin }) {
       default:
         break;
     }
-  }, [socketData, setPlayers, setJoin, setStartGame]);
+  }, [socketData]);
   console.log("Players in LobbyPage:", players);
 
   // Handle player readiness
@@ -57,7 +57,7 @@ export default function LobbyPage({ setStartGame, setJoin }) {
           {Object.keys(players).map(playerId => (
             <div className="flex flex-col items-center gap-y-2" key={players[playerId].id}>
               <div className="relative flex items-center justify-center cursor-pointer pb-3">
-                <img src={Avatars[players[playerId].avatar]} alt={`Avatar ${players[playerId].name}`} width={80} className="absolute" />
+                <img src={players[playerId].avatar} alt={`Avatar ${players[playerId].name}`} width={80} className="absolute" />
                 <div className={`border-4 ${players[playerId].ready ? "border-green-500" : "border-blue-500"} rounded-full w-[90px] h-[90px] mt-5`}></div>
                 <p className={`font-bold ${players[playerId].ready ? "bg-green-500" : "bg-blue-500"} rounded-full px-2 py-1 text-white absolute bottom-0 text-sm`}>{players[playerId].name}</p>
               </div>

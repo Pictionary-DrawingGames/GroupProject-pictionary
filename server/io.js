@@ -24,7 +24,9 @@ io.on("connection", socket => {
 
   // join
   socket.on("join", payload => {
-    const { name, avatar } = payload;
+    const { name, avatar } = payload.payload;
+    console.log(payload);
+
     players[id] = {
       id: id,
       name: name,

@@ -7,7 +7,7 @@ import { Avatars } from "../lib/utils"; // Pastikan path ini sesuai dengan struk
 // import AvatarSelection from "./AvatarSelection"; // Pastikan Anda memiliki komponen AvatarSelection
 
 export default function MainPage({ username, setUsername, setJoin }) {
-  const { socket, sendData, connectToServer } = useContext(SocketContext);
+  const { sendData, connectToServer } = useContext(SocketContext);
   const [viewAvatars, setViewAvatars] = useState(false);
   const [selectedAvatar, setSelectedAvatar] = useState(0); // Avatar yang dipilih
 
