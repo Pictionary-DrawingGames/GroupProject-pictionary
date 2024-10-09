@@ -5,7 +5,7 @@ import PlayersLabel from "../assets/players.png";
 export default function Players() {
   return (
     <>
-      <div className="flex flex-col h-screen w-[280px]">
+      <div className="flex flex-col w-full lg:w-[280px] lg:h-screen md:h-screen">
         <div className="flex flex-col items-center w-full h-full p-4 bg-white gap-y-4 border-[#431407] border-r-2">
           {/* <h1 className='font-bold text-lg mb-2 text-slate-700 w-full text-center'>Players</h1> */}
           <img src={PlayersLabel} alt="players" width={140} />

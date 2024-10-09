@@ -30,7 +30,7 @@ export default function Timer({ socket, seconds, setSeconds }) {
 
   return (
     <>
-      <div className="flex flex-col gap-y-1 w-32 justify-center items-center bg-white p-2 border-2 border-[#431407] rounded-lg">
+      <div className="flex flex-col gap-y-1 w-full md:w-32 lg:w-32 justify-center items-center bg-white p-2 border-2 border-[#431407] rounded-lg">
         <p className="font-bold text-orange-500 text-xs">TIME</p>
         <p>{seconds} seconds left</p>
       </div>
