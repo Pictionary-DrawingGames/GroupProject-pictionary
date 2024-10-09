@@ -1,7 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import Banner from "../assets/banner.png";
 import Background from "../assets/bg-repeat.png";
-import { Avatars } from "../lib/utils";
 import { SocketContext } from "../context/SocketProvider";
 
 export default function LobbyPage({ setStartGame, setJoin }) {
@@ -20,6 +19,7 @@ export default function LobbyPage({ setStartGame, setJoin }) {
       case "ready":
       case "leave":
         setPlayers(payload.players);
+        logPlayerReadiness(payload.players); // Log pemain yang sudah ready
         break;
       case "play":
         setIsPlaying(true);
@@ -32,6 +32,14 @@ export default function LobbyPage({ setStartGame, setJoin }) {
         break;
     }
   }, [socketData]);
+
+  const logPlayerReadiness = players => {
+    console.log("Status Pemain yang Siap:");
+    Object.keys(players).forEach(playerId => {
+      console.log(`${players[playerId].name} - Ready: ${players[playerId].ready}`);
+    });
+  };
+
   console.log("Players in LobbyPage:", players);
 
   // Handle player readiness
@@ -42,7 +50,11 @@ export default function LobbyPage({ setStartGame, setJoin }) {
     };
 
     sendData(data);
-    setIsReady(prev => !prev); // Toggle isReady state
+    setIsReady(prev => {
+      const newReadyState = !prev; // Toggle isReady state
+      console.log(`Player ${newReadyState ? "is now ready." : "is no longer ready."}`);
+      return newReadyState;
+    });
   };
 
   return (
