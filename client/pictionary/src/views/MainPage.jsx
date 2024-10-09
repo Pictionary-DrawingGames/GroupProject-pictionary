@@ -4,6 +4,7 @@ import Banner from "../assets/banner.png"; // Gambar banner
 import Background from "../assets/bg-repeat.png"; // Gambar latar belakang
 import { SocketContext } from "../context/SocketProvider"; // Mengimpor konteks socket
 import { Avatars } from "../lib/utils"; // Pastikan path ini sesuai dengan struktur folder Anda
+import AvatarSelection from "./AvatarPage";
 // import AvatarSelection from "./AvatarSelection"; // Pastikan Anda memiliki komponen AvatarSelection
 
 export default function MainPage({ username, setUsername, setJoin }) {
