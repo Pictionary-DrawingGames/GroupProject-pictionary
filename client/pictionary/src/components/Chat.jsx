@@ -52,7 +52,7 @@ export default function Chat({ socket }) {
               className="flex items-center gap-x-2 text-green-600"
             >
               <p className="font-bold">
-                {localStorage.getItem("userData")} guessed the word!
+                {localStorage.getItem("username")} guessed the word!
               </p>
             </div>
           </div>
