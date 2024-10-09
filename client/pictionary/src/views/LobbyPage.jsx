@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import Banner from "../assets/banner.png";
 import Background from "../assets/bg-repeat.png";
+import { useNavigate } from "react-router-dom";
 
 export default function LobbyPage({ socket }) {
   const [players, setPlayers] = useState({});
   const [isReady, setIsReady] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const navigate = useNavigate();
 
   // Ketika komponen dimount, kita mendengarkan data pemain dari server
   useEffect(() => {
@@ -19,13 +21,14 @@ export default function LobbyPage({ socket }) {
     // Mendengarkan event untuk memulai game
     socket.on("startGame", () => {
       setIsPlaying(true);
+      navigate("/game");
     });
 
     return () => {
       socket.off("updatePlayers"); // Membersihkan listener ketika komponen di-unmount
       socket.off("startGame");
     };
-  }, [socket]);
+  }, [socket, navigate]);
 
   // Handle player readiness
   const handleReady = () => {

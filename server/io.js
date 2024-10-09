@@ -54,6 +54,7 @@ io.on("connection", socket => {
         // Cek apakah semua pemain sudah siap
         if (allPlayersReady()) {
           // Jika semua pemain sudah siap, mulai permainan
+          io.emit("startGame");
           io.emit("play", { players: players });
           io.emit("next", {
             players: players,
@@ -119,19 +120,25 @@ io.on("connection", socket => {
   // pemain disconnect
   socket.on("disconnect", () => {
     console.log("A client has disconnected.");
-    removePlayer(socket, socket.id);
+    removePlayer(socket, id);
   });
 
-  socket.on("message:new", message => {
-    // if (message === 'baju') {
-    //   message = 'guessed right'
-    // }
+  socket.on("message:new", ({ answer, currentWord }) => {
+
+    let message = answer;
+    let correct = false;
+
+    // Logika untuk memeriksa apakah jawaban benar
+    if (answer == currentWord) {
+      correct = true
+    }
 
     io.emit("message:update", {
       username: socket.handshake.auth.username,
       score: socket.handshake.auth.score,
       avatar: socket.handshake.auth.avatar,
       message,
+      correct
     });
   });
 
