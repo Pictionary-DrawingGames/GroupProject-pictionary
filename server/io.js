@@ -54,6 +54,7 @@ io.on("connection", socket => {
         // Cek apakah semua pemain sudah siap
         if (allPlayersReady()) {
           // Jika semua pemain sudah siap, mulai permainan
+          io.emit("startGame");
           io.emit("play", { players: players });
           io.emit("next", {
             players: players,
