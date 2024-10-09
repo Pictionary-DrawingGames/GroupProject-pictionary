@@ -108,8 +108,8 @@ export default function LobbyPage({ setStartGame, setJoin }) {
                   {players[playerId].name}
                 </p>
               </div>
-            )
-          )}
+            </div>
+          ))}
         </div>
       </div>
       {isPlaying ? (
