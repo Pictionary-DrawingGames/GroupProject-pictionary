@@ -7,64 +7,61 @@ export default function LobbyPage({ socket }) {
   const [players, setPlayers] = useState({});
   const [isReady, setIsReady] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isStartingGame, setIsStartingGame] = useState(false); // New state for game starting
   const navigate = useNavigate();
 
-  // Ketika komponen dimount, kita mendengarkan data pemain dari server
+  // When the component mounts, listen for player data from the server
   useEffect(() => {
     socket.connect();
-    // Mendengarkan data pemain dari server
+
+    // Listen for player updates from the server
     socket.on("updatePlayers", playersData => {
       setPlayers(playersData);
-      console.log("Pemain yang diterima dari server: ", playersData);
+      console.log("Players received from server: ", playersData);
     });
 
-    // Mendengarkan event untuk memulai game
+    // Listen for game start event
     socket.on("startGame", () => {
-      setIsPlaying(true);
-      navigate("/game");
+      setIsStartingGame(true);
+      setTimeout(() => {
+        setIsPlaying(true); // Set isPlaying to true
+        navigate("/game");
+      }, 3000); // Adjust the time as needed
     });
 
     return () => {
-      socket.off("updatePlayers"); // Membersihkan listener ketika komponen di-unmount
+      // Clean up socket listeners when component unmounts
+      socket.off("updatePlayers");
       socket.off("startGame");
     };
   }, [socket, navigate]);
 
   // Handle player readiness
   const handleReady = () => {
-    // Menentukan ID pemain yang bersangkutan
-    const playerId = Object.keys(players).find(id => players[id].id === socket.id); // Ganti sesuai dengan cara mendapatkan playerId
+    const playerId = Object.keys(players).find(id => players[id].id === socket.id);
 
     if (isReady) {
-      // Jika pemain menekan tombol Cancel
       const data = {
-        action: "cancelReady", // Aksi untuk membatalkan
+        action: "cancelReady",
         payload: {
-          playerId: playerId, // ID pemain yang membatalkan
-          ready: false, // Menandakan bahwa pemain tidak siap
+          playerId: playerId,
+          ready: false,
         },
       };
-      console.log(data);
 
-      // Kirim data ke server untuk mengubah status siap pemain
       socket.emit("ready", data);
-
-      setIsReady(false); // Set isReady state kembali menjadi false
+      setIsReady(false);
     } else {
-      // Jika pemain menekan tombol Ready
       const data = {
         action: "ready",
         payload: {
-          playerId: playerId, // ID pemain yang sedang menekan tombol
-          ready: true, // Menandakan bahwa pemain siap
+          playerId: playerId,
+          ready: true,
         },
       };
-      console.log(data);
 
-      // Kirim data ke server untuk mengubah status siap pemain
       socket.emit("ready", data);
-
-      setIsReady(true); // Set isReady state menjadi true
+      setIsReady(true);
     }
   };
 
@@ -96,6 +93,8 @@ export default function LobbyPage({ socket }) {
       </div>
       {isPlaying ? (
         <div className="px-4 py-2 bg-[#FFBF00] font-bold border-[#431407] border-2 rounded-lg flex items-center justify-center">Starting Game ...</div>
+      ) : isStartingGame ? (
+        <div className="px-4 py-2 bg-[#FFBF00] font-bold border-[#431407] border-2 rounded-lg flex items-center justify-center">Game is starting...</div>
       ) : (
         <button
           className={`${
