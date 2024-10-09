@@ -142,6 +142,7 @@ export default function GamePage({ socket }) {
   }, [socket, words, seconds]);
 
   useEffect(() => {
+    socket.emit("players", players);
     console.log("Current players state: ", players); // Log current players state
   }, [players]);
 
@@ -154,7 +155,7 @@ export default function GamePage({ socket }) {
           backgroundColor: "#f97316",
         }}
       >
-        <Players />
+        <Players socket={socket} players={players} />
         <div className="flex flex-col items-center gap-y-2 w-full lg:w-[440px] h-full p-4">
           <div className="flex flex-col items-center gap-y-2 mb-8">
             <img src={Banner} alt="" className="w-[200px] md:w-[300px]" />
@@ -173,7 +174,7 @@ export default function GamePage({ socket }) {
             </div> */}
           </div>
         </div>
-        <Chat socket={socket} />
+        <Chat socket={socket} players={players} />
       </div>
     </>
   );

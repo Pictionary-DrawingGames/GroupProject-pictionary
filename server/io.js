@@ -103,6 +103,36 @@ io.on("connection", socket => {
     io.emit("set_word", { word: payload.word });
   });
 
+  // Event 'join'
+  socket.on("players", data => {
+    if (!data || !data.payload) {
+      console.error("Data or payload is undefined:", data);
+      return;
+    }
+
+    const { name, avatar, score } = data.payload;
+
+    if (!name || !avatar || score === undefined) {
+      console.error("Name, avatar, or score is missing in the payload:", data.payload);
+      return;
+    }
+
+    // Menyimpan pemain dengan data yang diterima dari client
+    players[socket.id] = {
+      id: socket.id,
+      name: name,
+      avatar: avatar,
+      score: parseInt(score, 10) || 0,
+      ready: false,
+      correct: false,
+    };
+
+    console.log("Current players:", players);
+
+    // Emit pemain yang sudah bergabung kepada semua klien
+    io.emit("updatePlayers", players);
+  });
+
   // pesan dari pemain (baru)
   // socket.on("message", payload => {
   //   const { correct, drawerId, timeGuessed } = payload;
