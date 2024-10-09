@@ -8,7 +8,7 @@ import RevealWord from "../components/RevealWord";
 import Banner from "../assets/banner.png";
 import Background from "../assets/bg-repeat.png";
 
-export default function GamePage() {
+export default function GamePage({ socket }) {
   return (
     <>
       <div
@@ -29,7 +29,7 @@ export default function GamePage() {
           <DrawingBoard />
           <Timer />
         </div>
-        <Chat />
+        <Chat socket={socket} />
       </div>
     </>
   );
