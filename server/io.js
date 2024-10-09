@@ -18,38 +18,61 @@ const io = new Server(3000, {
   },
 });
 
-io.on("connection", (socket) => {
+io.on("connection", socket => {
   const id = uuidv4();
   console.log("A client has connected.");
 
   // join
-  socket.on("join", payload => {
-    const { name, avatar } = payload.payload;
-    console.log(payload);
-
-    players[id] = {
-      id: id,
-      name: name,
-      avatar: avatar,
-      score: 0,
+  socket.on("join", data => {
+    players[socket.id] = {
+      id: socket.id,
+      name: data.payload.name,
+      avatar: data.payload.avatar,
       ready: false,
+      score: 0,
       correct: false,
     };
+    console.log(players);
 
-    console.log("Players after join:", players);
-    socket.broadcast.emit("join", { action: "join", payload: { players: players } });
-    socket.emit("get_id", { action: "get_id", payload: { id: id } });
+    // Broadcast pemain yang sudah bergabung kepada semua klien
+    io.emit("updatePlayers", players);
   });
 
   // player ready
-  socket.on("ready", () => {
-    players[id].ready = true;
-    io.emit("ready", { players: players });
+  socket.on("ready", data => {
+    const { action, payload } = data;
 
-    if (allPlayersReady()) {
-      io.emit("play", { players: players });
-      io.emit("next", { players: players, drawer: players[Object.keys(players)[drawerIndex]] });
-      status = "playing";
+    if (action === "ready") {
+      // Pastikan pemain yang terhubung terdaftar di players
+      if (players[payload.playerId]) {
+        players[payload.playerId].ready = true; // Ubah status ready pemain menjadi true
+        console.log(`Player ${payload.playerId} is ready`);
+
+        // Emit update kepada semua klien tentang status pemain
+        io.emit("updatePlayers", players); // Kirim semua data pemain termasuk status siap
+
+        // Cek apakah semua pemain sudah siap
+        if (allPlayersReady()) {
+          // Jika semua pemain sudah siap, mulai permainan
+          io.emit("play", { players: players });
+          io.emit("next", {
+            players: players,
+            drawer: players[Object.keys(players)[drawerIndex]], // Ganti drawerIndex sesuai kebutuhan
+          });
+          status = "playing"; // Ubah status permainan menjadi "playing"
+        }
+      } else {
+        console.log("Player not found in players object.");
+      }
+    } else if (action === "cancelReady") {
+      // Jika aksi adalah membatalkan kesiapan
+      if (players[payload.playerId]) {
+        players[payload.playerId].ready = false; // Ubah status ready pemain menjadi false
+        console.log(`Player ${payload.playerId} canceled readiness`);
+
+        // Emit update kepada semua klien tentang status pemain
+        io.emit("updatePlayers", players); // Kirim semua data pemain termasuk status siap
+      }
     }
   });
 
@@ -118,7 +141,7 @@ io.on("connection", (socket) => {
     });
   });
 
-  socket.on("drawing:data", (data) => {
+  socket.on("drawing:data", data => {
     // Mengirim data gambar ke semua klien (termasuk pengirim)
     io.emit("drawing:receive", data);
   });
@@ -129,13 +152,13 @@ io.on("connection", (socket) => {
   });
 
   // Mendengarkan perubahan timer dari klien
-  socket.on("timer:update", (newSeconds) => {
+  socket.on("timer:update", newSeconds => {
     // Kirim update ke semua klien yang terhubung
     io.emit("timer:update", newSeconds);
   });
 
   // Menerima kata yang dipilih dan mengirimnya ke semua klien
-  socket.on("word:chosen", (word) => {
+  socket.on("word:chosen", word => {
     io.emit("word:update", word);
   });
 });
