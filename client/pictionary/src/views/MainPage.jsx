@@ -1,8 +1,23 @@
+import { useState } from "react";
 import Avatar from "../assets/avatars/0.png";
 import Banner from "../assets/banner.png";
 import Background from "../assets/bg-repeat.png";
+import { useNavigate } from "react-router-dom";
 
 export default function MainPage() {
+  const [username, setUsername] = useState("");
+  const [score, Setscore] = useState(0);
+  const [avatar, setAvatar] = useState(Avatar);
+  const navigate = useNavigate();
+
+  const handleJoin = (event) => {
+    event.preventDefault();
+    localStorage.setItem("username", username);
+    localStorage.setItem("userScore", score);
+    localStorage.setItem("userAvatar", avatar);
+    navigate("/game");
+  };
+
   return (
     <>
       <div
@@ -45,21 +60,23 @@ export default function MainPage() {
                 Change Avatar
               </p>
             </div>
-            <input
-              maxlength="10"
-              className="w-48 p-2 text-center border-2 rounded-lg"
-              type="text"
-              //   value={username}
-              placeholder="Enter your nickname"
-              //   onChange={(e) => setUsername(e.target.value)}
-            />
-            <button
-              //   disabled={username.length == 0}
-              //   onClick={handleJoin}
-              className="bg-orange-500 hover:bg-orange-400 text-white font-bold py-2 px-4 border-b-4 border-orange-700 hover:border-orange-500 rounded w-full shadow-md drop-shadow-md"
-            >
-              Join Room
-            </button>
+            <form className="flex flex-col items-center gap-y-4 bg-white rounded-lg p-8">
+              <input
+                maxLength="10"
+                className="w-48 p-2 text-center border-2 rounded-lg"
+                type="text"
+                value={username}
+                placeholder="Enter your nickname"
+                onChange={(e) => setUsername(e.target.value)}
+              />
+              <button
+                disabled={username.length == 0}
+                onClick={handleJoin}
+                className="bg-orange-500 hover:bg-orange-400 text-white font-bold py-2 px-4 border-b-4 border-orange-700 hover:border-orange-500 rounded w-full shadow-md drop-shadow-md"
+              >
+                Join Room
+              </button>
+            </form>
           </div>
         </div>
         {/* {viewAvatars ? (

@@ -5,6 +5,11 @@ import FinalPage from "../views/FinalPage";
 import GamePage from "../views/GamePage";
 import LobbyPage from "../views/LobbyPage";
 
+import { io } from "socket.io-client";
+const socket = io("http://localhost:3000", {
+  autoConnect: false,
+});
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -20,7 +25,7 @@ const router = createBrowserRouter([
   },
   {
     path: "/game",
-    element: <GamePage />,
+    element: <GamePage socket={socket} />,
   },
   {
     path: "/lobby",
