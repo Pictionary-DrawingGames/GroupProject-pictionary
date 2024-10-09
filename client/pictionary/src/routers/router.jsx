@@ -13,7 +13,7 @@ const socket = io("http://localhost:3000", {
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <MainPage />,
+    element: <MainPage socket={socket} />,
   },
   {
     path: "/avatar",
@@ -29,7 +29,7 @@ const router = createBrowserRouter([
   },
   {
     path: "/lobby",
-    element: <LobbyPage />,
+    element: <LobbyPage socket={socket} />,
   },
 ]);
 
