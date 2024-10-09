@@ -15,6 +15,10 @@ export default function LobbyPage({ socket }) {
     // Mendengarkan data pemain dari server
     socket.on("updatePlayers", playersData => {
       setPlayers(playersData);
+      localStorage.setItem("username", playersData[socket.id].name);
+      localStorage.setItem("userScore", playersData[socket.id].score);
+      localStorage.setItem("userAvatar", playersData[socket.id].avatar);
+
       console.log("Pemain yang diterima dari server: ", playersData);
     });
 

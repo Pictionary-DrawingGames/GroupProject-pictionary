@@ -1,15 +1,11 @@
 import { useEffect, useState } from "react";
 import ChatLabel from "../assets/chat.png";
 
-export default function Chat({ socket }) {
+export default function Chat({ socket, players }) {
   const [answer, setAnswer] = useState("");
   const [messages, setMessages] = useState([]);
   const [currentWord, setCurrentWord] = useState("");
-
-  // State untuk melacak apakah sudah menjawab benar untuk currentWord
   const [hasAnsweredCorrectly, setHasAnsweredCorrectly] = useState(false);
-
-  // Ambil score dari localStorage, atau default ke 0 jika tidak ada
   const [score, setScore] = useState(() => {
     const savedScore = localStorage.getItem("userScore");
     return savedScore ? parseInt(savedScore, 10) : 0;
@@ -18,11 +14,10 @@ export default function Chat({ socket }) {
   // Mendengarkan perubahan kata dari server
   useEffect(() => {
     socket.on("word:update", (word) => {
-      setCurrentWord(word); // Mengupdate currentWord setiap kali server mengirimkan kata baru
-      setHasAnsweredCorrectly(false); // Reset state ketika currentWord berubah
+      setCurrentWord(word);
+      setHasAnsweredCorrectly(false);
     });
 
-    // Cleanup listener ketika komponen unmount
     return () => {
       socket.off("word:update");
     };
@@ -30,34 +25,25 @@ export default function Chat({ socket }) {
 
   const handleSendMessage = (event) => {
     event.preventDefault();
-
-    // Mengirimkan pesan yang mencakup nilai answer dan currentWord
     socket.emit("message:new", { answer, currentWord });
-
-    setAnswer(""); // Reset input setelah pesan dikirim
+    setAnswer("");
   };
 
   useEffect(() => {
-    // Set auth untuk socket
     socket.auth = {
       username: localStorage.getItem("username"),
       score: localStorage.getItem("userScore"),
       avatar: localStorage.getItem("useravatar"),
     };
 
-    // Connect socket setelah auth diset
     socket.connect();
 
-    // Mendengarkan update message dari server
     socket.on("message:update", (newMessage) => {
-      setMessages((current) => {
-        return [...current, newMessage];
-      });
+      setMessages((current) => [...current, newMessage]);
 
-      // Jika pesan benar dan belum menjawab benar sebelumnya, tambahkan 20 poin
       if (newMessage.correct && !hasAnsweredCorrectly) {
         setScore((prevScore) => prevScore + 20);
-        setHasAnsweredCorrectly(true); // Set bahwa sudah menjawab benar untuk currentWord ini
+        setHasAnsweredCorrectly(true);
       }
     });
 
@@ -67,7 +53,6 @@ export default function Chat({ socket }) {
     };
   }, [socket, hasAnsweredCorrectly]);
 
-  // Simpan score ke localStorage setiap kali nilai score berubah
   useEffect(() => {
     localStorage.setItem("userScore", score);
   }, [score]);

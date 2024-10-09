@@ -54,8 +54,8 @@ io.on("connection", socket => {
         // Cek apakah semua pemain sudah siap
         if (allPlayersReady()) {
           // Jika semua pemain sudah siap, mulai permainan
-          io.emit("startGame");
-          io.emit("play", { players: players });
+          io.emit("startGame", { players: players });
+          // io.emit("play", { players: players });
           io.emit("next", {
             players: players,
             drawer: players[Object.keys(players)[drawerIndex]], // Ganti drawerIndex sesuai kebutuhan
@@ -103,6 +103,36 @@ io.on("connection", socket => {
     io.emit("set_word", { word: payload.word });
   });
 
+  // Event 'join'
+  socket.on("players", data => {
+    if (!data || !data.payload) {
+      console.error("Data or payload is undefined:", data);
+      return;
+    }
+
+    const { name, avatar, score } = data.payload;
+
+    if (!name || !avatar || score === undefined) {
+      console.error("Name, avatar, or score is missing in the payload:", data.payload);
+      return;
+    }
+
+    // Menyimpan pemain dengan data yang diterima dari client
+    players[socket.id] = {
+      id: socket.id,
+      name: name,
+      avatar: avatar,
+      score: parseInt(score, 10) || 0,
+      ready: false,
+      correct: false,
+    };
+
+    console.log("Current players:", players);
+
+    // Emit pemain yang sudah bergabung kepada semua klien
+    io.emit("updatePlayers", players);
+  });
+
   // pesan dari pemain (baru)
   // socket.on("message", payload => {
   //   const { correct, drawerId, timeGuessed } = payload;
@@ -120,17 +150,16 @@ io.on("connection", socket => {
   // pemain disconnect
   socket.on("disconnect", () => {
     console.log("A client has disconnected.");
-    removePlayer(socket, id);
+    removePlayer(socket, socket.id);
   });
 
   socket.on("message:new", ({ answer, currentWord }) => {
-
     let message = answer;
     let correct = false;
 
     // Logika untuk memeriksa apakah jawaban benar
     if (answer == currentWord) {
-      correct = true
+      correct = true;
     }
 
     io.emit("message:update", {
@@ -138,7 +167,7 @@ io.on("connection", socket => {
       score: socket.handshake.auth.score,
       avatar: socket.handshake.auth.avatar,
       message,
-      correct
+      correct,
     });
   });
 
