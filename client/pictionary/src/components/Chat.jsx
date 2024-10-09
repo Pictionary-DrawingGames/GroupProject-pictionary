@@ -4,10 +4,12 @@ import ChatLabel from "../assets/chat.png";
 export default function Chat({ socket }) {
   const [answer, setAnswer] = useState("");
   const [messages, setMessages] = useState([]);
+  const [currentWord, setCurrentWord] = useState("");
 
   const handleSendMessage = (event) => {
     event.preventDefault();
     socket.emit("message:new", answer);
+    setAnswer("");
   };
 
   useEffect(() => {

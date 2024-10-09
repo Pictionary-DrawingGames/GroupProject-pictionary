@@ -1,22 +1,66 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
-export default function DrawingBoard({ sendData, word }) {
+export default function DrawingBoard({ socket }) {
   const canvasRef = useRef(null);
   const contextRef = useRef(null);
   const isDrawing = useRef(false);
+  const [currentWord, setCurrentWord] = useState("");
 
-  const handleErase = () => {
-    useRef(null);
+  // Mengirim data koordinat melalui socket.io
+  const sendDrawingData = (action, x, y) => {
+    socket.emit("drawing:data", { action, x, y });
   };
 
+  // Fungsi untuk menginisialisasi canvas
   useEffect(() => {
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
     context.strokeStyle = "black"; // ubah warna
     context.lineWidth = 2; // ketebalan garis
     contextRef.current = context;
-  }, []);
 
+    // Set auth dan connect ke socket
+    socket.auth = {
+      username: localStorage.getItem("username"),
+      score: localStorage.getItem("userScore"),
+      avatar: localStorage.getItem("useravatar"),
+    };
+    socket.connect();
+
+    // Mendengarkan kata yang dipilih dari server
+    socket.on("word:update", (word) => {
+      setCurrentWord(word);
+    });
+
+    // Mendengarkan data gambar dari server
+    socket.on("drawing:receive", (data) => {
+      const context = contextRef.current;
+      if (data.action === "start") {
+        context.beginPath();
+        context.moveTo(data.x, data.y);
+      } else if (data.action === "draw") {
+        context.lineTo(data.x, data.y);
+        context.stroke();
+      } else if (data.action === "stop") {
+        context.closePath();
+      }
+    });
+
+    // Mendengarkan event clear dari server untuk membersihkan canvas
+    socket.on("drawing:clear", () => {
+      handleClearCanvas();
+    });
+
+    // Cleanup saat komponen di-unmount
+    return () => {
+      socket.off("word:update");
+      socket.off("drawing:receive");
+      socket.off("drawing:clear");
+      socket.disconnect();
+    };
+  }, [socket]);
+
+  // Fungsi untuk menangani mouse down (mulai menggambar)
   const handleMouseDown = (e) => {
     isDrawing.current = true;
     const coords = getMouseCoords(canvasRef.current, e);
@@ -24,15 +68,10 @@ export default function DrawingBoard({ sendData, word }) {
     context.beginPath();
     context.moveTo(coords.x, coords.y);
 
-    const data = {
-      action: "start",
-      currentX: coords.x,
-      currentY: coords.y,
-    };
-
-    sendData(JSON.stringify(data));
+    sendDrawingData("start", coords.x, coords.y);
   };
 
+  // Fungsi untuk menangani mouse move (saat menggambar)
   const handleMouseMove = (e) => {
     if (!isDrawing.current) return;
     const coords = getMouseCoords(canvasRef.current, e);
@@ -40,27 +79,19 @@ export default function DrawingBoard({ sendData, word }) {
     context.lineTo(coords.x, coords.y);
     context.stroke();
 
-    const data = {
-      action: "draw",
-      currentX: coords.x,
-      currentY: coords.y,
-    };
-
-    sendData(JSON.stringify(data));
+    sendDrawingData("draw", coords.x, coords.y);
   };
 
+  // Fungsi untuk menangani mouse up (selesai menggambar)
   const handleMouseUp = () => {
     isDrawing.current = false;
     const context = contextRef.current;
     context.closePath();
 
-    const data = {
-      action: "stop",
-    };
-
-    sendData(JSON.stringify(data));
+    sendDrawingData("stop", 0, 0); // Kirim aksi berhenti
   };
 
+  // Mendapatkan koordinat mouse
   const getMouseCoords = (canvas, e) => {
     const rect = canvas.getBoundingClientRect();
     return {
@@ -69,6 +100,7 @@ export default function DrawingBoard({ sendData, word }) {
     };
   };
 
+  // Event listener untuk mouse events
   useEffect(() => {
     const canvas = canvasRef.current;
     canvas.addEventListener("mousedown", handleMouseDown);
@@ -82,10 +114,17 @@ export default function DrawingBoard({ sendData, word }) {
     };
   }, []);
 
+  // Fungsi untuk membersihkan canvas
   const handleClearCanvas = () => {
     const canvas = canvasRef.current;
     const context = contextRef.current;
     context.clearRect(0, 0, canvas.width, canvas.height); // Membersihkan seluruh canvas
+  };
+
+  // Fungsi untuk mengirimkan event clear melalui socket.io
+  const handleClearCanvasClick = () => {
+    handleClearCanvas(); // Bersihkan canvas pada klien sendiri
+    socket.emit("drawing:clear"); // Kirim event clear ke server untuk disebarkan ke semua klien
   };
 
   return (
@@ -93,7 +132,9 @@ export default function DrawingBoard({ sendData, word }) {
       <div className="flex flex-col items-center relative pt-4">
         <div className="flex justify-between">
           <div className="flex justify-center">
-            <p className="absolute top-10">Lampu</p>
+            <p className="absolute top-10">
+              {currentWord && currentWord.toUpperCase()}
+            </p>
             <h1 className="font-bold absolute top-0 bg-[#FFBF1F] border-2 rounded-full px-4 py-1 border-[#431407] text-xs">
               YOU ARE THE DRAWER
             </h1>
@@ -108,7 +149,7 @@ export default function DrawingBoard({ sendData, word }) {
 
           <div className="drop-shadow-xl">
             <button
-              onClick={handleClearCanvas}
+              onClick={handleClearCanvasClick}
               className="ml-1 mt-1 border border-black bg-white text-black px-4 py-2 rounded-lg"
             >
               Clear
