@@ -18,25 +18,16 @@ const io = new Server(3000, {
   },
 });
 
-io.on("connection", socket => {
+io.on("connection", (socket) => {
   const id = uuidv4();
   console.log("A client has connected.");
 
   // join
-  socket.on("join", data => {
+  socket.on("join", (data) => {
     players[socket.id] = {
       id: socket.id,
       name: data.payload.name,
       avatar: data.payload.avatar,
-  socket.on("join", (payload) => {
-    const { name, avatar } = payload.payload;
-    console.log(payload);
-
-    players[id] = {
-      id: id,
-      name: name,
-      avatar: avatar,
-      score: 0,
       ready: false,
       score: 0,
       correct: false,
@@ -45,16 +36,10 @@ io.on("connection", socket => {
 
     // Broadcast pemain yang sudah bergabung kepada semua klien
     io.emit("updatePlayers", players);
-    console.log("Players after join:", players);
-    socket.broadcast.emit("join", {
-      action: "join",
-      payload: { players: players },
-    });
-    socket.emit("get_id", { action: "get_id", payload: { id: id } });
   });
 
   // player ready
-  socket.on("ready", data => {
+  socket.on("ready", (data) => {
     const { action, payload } = data;
 
     if (action === "ready") {
@@ -89,17 +74,6 @@ io.on("connection", socket => {
         // Emit update kepada semua klien tentang status pemain
         io.emit("updatePlayers", players); // Kirim semua data pemain termasuk status siap
       }
-  socket.on("ready", () => {
-    players[id].ready = true;
-    io.emit("ready", { players: players });
-
-    if (allPlayersReady()) {
-      io.emit("play", { players: players });
-      io.emit("next", {
-        players: players,
-        drawer: players[Object.keys(players)[drawerIndex]],
-      });
-      status = "playing";
     }
   });
 
@@ -135,7 +109,7 @@ io.on("connection", socket => {
   });
 
   // Event 'join'
-  socket.on("players", data => {
+  socket.on("players", (data) => {
     if (!data || !data.payload) {
       console.error("Data or payload is undefined:", data);
       return;
@@ -144,7 +118,10 @@ io.on("connection", socket => {
     const { name, avatar, score } = data.payload;
 
     if (!name || !avatar || score === undefined) {
-      console.error("Name, avatar, or score is missing in the payload:", data.payload);
+      console.error(
+        "Name, avatar, or score is missing in the payload:",
+        data.payload
+      );
       return;
     }
 
@@ -189,24 +166,33 @@ io.on("connection", socket => {
     let correct = false;
 
     // Logika untuk memeriksa apakah jawaban benar
-    if (answer == currentWord) {
+    if (answer === currentWord) {
       correct = true;
-    }
-  socket.on("message:new", (message) => {
-    // if (message === 'baju') {
-    //   message = 'guessed right'
-    // }
 
+      // Tambahkan 100 poin ke pemain yang menebak dengan benar
+      if (players[socket.id]) {
+        players[socket.id].score += 100;
+        console.log(
+          `Player ${socket.id} guessed correctly and received 100 points.`,
+          players[socket.id].score
+        );
+      }
+    }
+
+    // Emit pesan ke semua klien, termasuk status jawaban benar dan skor terbaru
     io.emit("message:update", {
       username: socket.handshake.auth.username,
-      score: socket.handshake.auth.score,
+      score: players[socket.id]?.score || 0, // Mengambil skor terbaru dari player
       avatar: socket.handshake.auth.avatar,
       message,
       correct,
     });
+
+    // Emit update skor kepada semua klien
+    io.emit("updatePlayers", players);
   });
 
-  socket.on("drawing:data", data => {
+  socket.on("drawing:data", (data) => {
     // Mengirim data gambar ke semua klien (termasuk pengirim)
     io.emit("drawing:receive", data);
   });
@@ -217,13 +203,13 @@ io.on("connection", socket => {
   });
 
   // Mendengarkan perubahan timer dari klien
-  socket.on("timer:update", newSeconds => {
+  socket.on("timer:update", (newSeconds) => {
     // Kirim update ke semua klien yang terhubung
     io.emit("timer:update", newSeconds);
   });
 
   // Menerima kata yang dipilih dan mengirimnya ke semua klien
-  socket.on("word:chosen", word => {
+  socket.on("word:chosen", (word) => {
     io.emit("word:update", word);
   });
 });

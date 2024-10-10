@@ -1,4 +1,3 @@
-// Players.js
 import { useEffect, useState } from "react";
 import Pencil from "../assets/pencil.png";
 import Avatars from "../assets/avatars/0.png";
@@ -9,6 +8,7 @@ export default function Players({ socket }) {
     name: "",
     avatar: Avatars,
     score: 0,
+    id: null, // Tambahkan id untuk membedakan pemain
   });
   const [players, setPlayers] = useState({}); // Menyimpan semua pemain
 
@@ -17,11 +17,13 @@ export default function Players({ socket }) {
     const username = localStorage.getItem("username") || "Anonymous";
     const userScore = localStorage.getItem("userScore") || 0;
     const userAvatar = localStorage.getItem("userAvatar") || Avatars;
+    const userId = localStorage.getItem("userId") || null; // Tambahkan id pengguna
 
     const playerData = {
       name: username,
       avatar: userAvatar,
       score: parseInt(userScore, 10) || 0,
+      id: userId, // Set id dari localStorage atau server
     };
 
     setCurrentPlayer(playerData);
@@ -32,7 +34,7 @@ export default function Players({ socket }) {
     });
 
     // Menerima pembaruan pemain dari server
-    socket.on("updatePlayers", updatedPlayers => {
+    socket.on("updatePlayers", (updatedPlayers) => {
       setPlayers(updatedPlayers);
       console.log("Updated players:", updatedPlayers);
     });
@@ -49,15 +51,20 @@ export default function Players({ socket }) {
         <img src={PlayersLabel} alt="players" width={140} />
         <div className="flex flex-col w-full">
           {/* Tampilkan semua pemain */}
-          {Object.values(players).map(player => (
-            <div key={player.id} className="flex items-center justify-between w-full p-2 border-b border-slate-200">
+          {Object.values(players).map((player) => (
+            <div
+              key={player.id}
+              className="flex items-center justify-between w-full p-2 border-b border-slate-200"
+            >
               <div className="flex items-center gap-x-3">
                 <img src={player.avatar} alt="avatar" width={40} />
                 <div className="flex flex-col">
                   <p className="font-bold text-slate-700">
                     {player.name} {player.id === currentPlayer.id ? "✅" : ""}
                   </p>
-                  <p className="text-xs text-slate-500">{player.score} points</p>
+                  <p className="text-xs text-slate-500">
+                    {player.score} points
+                  </p>
                 </div>
               </div>
               <img src={Pencil} alt="draw-icon" width={25} />

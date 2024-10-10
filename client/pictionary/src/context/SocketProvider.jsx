@@ -11,6 +11,7 @@ export const SocketProvider = ({ children, setEndGame }) => {
   const [drawer, setDrawer] = useState(null);
   const [word, setWord] = useState(null);
   const [end, setEnd] = useState(false);
+  const [messages, setMessages] = useState([]); // Tambahkan state untuk menyimpan pesan
 
   // Koneksi ke server menggunakan socket.io
   const connectToServer = () => {
@@ -70,6 +71,28 @@ export const SocketProvider = ({ children, setEndGame }) => {
       }
     });
 
+    // Tangkap event 'message:update'
+    newSocket.on("message:update", (data) => {
+      if (data) {
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          {
+            username: data.username,
+            message: data.message,
+            correct: data.correct,
+          },
+        ]);
+        // Bisa tampilkan pesan atau lakukan apapun sesuai kebutuhan
+      }
+    });
+
+    // Tangkap event 'updatePlayers' untuk memperbarui skor
+    newSocket.on("updatePlayers", (data) => {
+      if (data) {
+        setPlayers(data); // Update pemain dan skor
+      }
+    });
+
     newSocket.on("disconnect", () => {
       console.log("Disconnected from the server");
     });
@@ -94,8 +117,11 @@ export const SocketProvider = ({ children, setEndGame }) => {
 
   // Mengirim data ke server menggunakan socket.io
   const sendData = (data) => {
-    if (socket) {
-      socket.emit("join", data);
+    if (socket && data && data.action) {
+      // Emit sesuai action
+      socket.emit(data.action, data);
+    } else {
+      console.error("Data atau socket tidak valid untuk dikirim.");
     }
   };
 
@@ -113,6 +139,7 @@ export const SocketProvider = ({ children, setEndGame }) => {
         setPlayers,
         sendData,
         connectToServer,
+        messages, // Sediakan state untuk pesan
       }}
     >
       {children}
