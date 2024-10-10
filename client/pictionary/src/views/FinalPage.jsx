@@ -1,7 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import Banner from "../assets/banner.png";
-import Background from "../assets/bg-repeat.png";
-import Avatars from "../assets/avatars/0.png";
 import { themeContext } from "../context/themeContext.jsx";
 import { useContext } from "react";
 
@@ -32,7 +30,7 @@ export default function FinalPage() {
 
               <div className="w-full flex items-center justify-between">
                 <div className="flex items-center gap-x-3">
-                  <img src={Avatars} alt="avatar" width={35} />
+                  <img src={winner.avatar} alt="avatar" width={35} />
                   <div className="flex flex-col">
                     {/* Menampilkan nama pemenang */}
                     <p className="font-bold">{winner.name}</p>

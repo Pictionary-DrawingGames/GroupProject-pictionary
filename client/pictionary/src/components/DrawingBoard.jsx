@@ -9,6 +9,9 @@ export default function DrawingBoard({ socket, seconds, setSeconds }) {
   const [drawer, setDrawer] = useState(null); // Menyimpan informasi drawer
   const [players, setPlayers] = useState({});
 
+  // Total waktu (dalam detik) untuk timer
+  const totalSeconds = 35; // Anda dapat mengubah nilai ini sesuai kebutuhan
+
   // Mengirim data koordinat melalui socket.io
   const sendDrawingData = (action, x, y) => {
     socket.emit("drawing:data", { action, x, y });
@@ -85,43 +88,6 @@ export default function DrawingBoard({ socket, seconds, setSeconds }) {
     socket.emit("drawing:clear"); // Kirim event clear ke server untuk disebarkan ke semua klien
   };
 
-  // Fungsi untuk menangani mouse down
-  // const startDrawing = e => {
-  //   if (drawer && isCurrentPlayerDrawer()) {
-  //     // Cek apakah pemain adalah drawer
-  //     isDrawing.current = true;
-  //     const rect = canvasRef.current.getBoundingClientRect();
-  //     const x = e.clientX - rect.left;
-  //     const y = e.clientY - rect.top;
-
-  //     contextRef.current.beginPath();
-  //     contextRef.current.moveTo(x, y);
-  //     socket.emit("drawing:receive", { action: "start", x, y }); // Kirim posisi ke server
-  //   }
-  // };
-
-  // // Fungsi untuk menggambar
-  // const draw = e => {
-  //   if (isDrawing.current && drawer && isCurrentPlayerDrawer()) {
-  //     const rect = canvasRef.current.getBoundingClientRect();
-  //     const x = e.clientX - rect.left;
-  //     const y = e.clientY - rect.top;
-
-  //     contextRef.current.lineTo(x, y);
-  //     contextRef.current.stroke();
-  //     socket.emit("drawing:receive", { action: "draw", x, y }); // Kirim posisi ke server
-  //   }
-  // };
-
-  // // Fungsi untuk menghentikan menggambar
-  // const stopDrawing = () => {
-  //   if (isDrawing.current) {
-  //     isDrawing.current = false;
-  //     contextRef.current.closePath();
-  //     socket.emit("drawing:receive", { action: "stop" }); // Kirim event stop ke server
-  //   }
-  // };
-
   // Fungsi untuk menangani mouse down (mulai menggambar)
   const handleMouseDown = e => {
     isDrawing.current = true;
@@ -156,28 +122,13 @@ export default function DrawingBoard({ socket, seconds, setSeconds }) {
   // Mendapatkan koordinat mouse
   const getMouseCoords = (canvas, e) => {
     const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width; // skala X
+    const scaleY = canvas.height / rect.height; // skala Y
     return {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY,
     };
   };
-
-  // Menambahkan event listener pada canvas
-  // useEffect(() => {
-  //   const canvas = canvasRef.current;
-  //   canvas.addEventListener("mousedown", startDrawing);
-  //   canvas.addEventListener("mousemove", draw);
-  //   canvas.addEventListener("mouseup", stopDrawing);
-  //   canvas.addEventListener("mouseleave", stopDrawing); // Hentikan menggambar saat mouse meninggalkan canvas
-
-  //   // Cleanup saat komponen di-unmount
-  //   return () => {
-  //     canvas.removeEventListener("mousedown", startDrawing);
-  //     canvas.removeEventListener("mousemove", draw);
-  //     canvas.removeEventListener("mouseup", stopDrawing);
-  //     canvas.removeEventListener("mouseleave", stopDrawing);
-  //   };
-  // }, [drawer]); // Menggunakan drawer sebagai dependencies
 
   // Event listener untuk mouse events
   useEffect(() => {
@@ -199,44 +150,40 @@ export default function DrawingBoard({ socket, seconds, setSeconds }) {
     return drawer && drawer.name === currentPlayerId; // Cek apakah ID pemain saat ini sama dengan ID drawer
   };
 
-  // Mendapatkan daftar ID pemain
-  const playerIds = Object.keys(players).map(player => players[player].id);
-
   return (
     <>
       <div className="flex flex-col items-center relative pt-4">
         <div className="flex flex-col md:flex-row justify-between">
-          <div className="flex justify-center">
+          <div className="flex justify-center relative">
+            {" "}
+            {/* Set relative positioning for the canvas container */}
             <p className="absolute top-10 text-sm md:text-base">{!isCurrentPlayerDrawer() ? "" : currentWord && currentWord.toUpperCase()}</p>
             {drawer?.id && <h1 className="font-bold absolute top-0 bg-[#FFBF1F] border-2 rounded-full px-4 py-1 border-[#431407] text-xs">{!isCurrentPlayerDrawer() ? "GUESS THE WORD" : "YOU ARE THE DRAWER"}</h1>}
             <canvas
               id="gameCanvas"
-              width={300}
-              height={300}
+              width={700} // Set the internal size of the canvas
+              height={700} // Set the internal size of the canvas
               ref={canvasRef}
-              className={`bg-white rounded-lg border-2 border-[#431407] md:w-[400px] md:h-[400px] ${!isCurrentPlayerDrawer() ? "pointer-events-none" : ""}`} // Disable pointer events if not drawer
+              className={`bg-white rounded-lg border-2 border-[#431407] md:w-[600px] md:h-[600px] ${!isCurrentPlayerDrawer() ? "pointer-events-none" : ""}`} // Adjust size for larger canvas
+              style={{ width: "100%", height: "100%" }} // Responsive size
             ></canvas>
+            {/* Timer positioned inside the canvas */}
+            <div className="absolute bottom-2 left-0 right-0 flex justify-center">
+              <Timer socket={socket} seconds={seconds} setSeconds={setSeconds} totalSeconds={totalSeconds} />
+            </div>
           </div>
-          <div>
-            <div className="flex justify-center drop-shadow-xl mt-2 md:mt-1">
-              <button
-                onClick={handleClearCanvasClick}
-                className={`ml-1 mt-1 border border-black bg-white text-black px-4 py-2 rounded-lg ${!isCurrentPlayerDrawer() ? "opacity-50 cursor-not-allowed" : ""}`} // Disable button if not drawer
-                disabled={!isCurrentPlayerDrawer()} // Disable button if not drawer
-              >
-                Clear
-              </button>
-            </div>
-            <div className="text-center mr-0 md:mr-1 mt-3 ml-1">
-              <Timer socket={socket} seconds={seconds} setSeconds={setSeconds} />
-            </div>
-            {/* Menampilkan nama dan avatar drawer
-            {drawer && (
-              <div className="flex flex-col items-center mt-2">
-                <img src={drawer.avatar} alt={drawer.name} className="w-12 h-12 rounded-full" />
-                <p className="text-lg font-semibold">{drawer.name}</p>
-              </div>
-            )} */}
+        </div>
+
+        {/* Clear button below the canvas */}
+        <div className="flex flex-col items-center mt-2">
+          <div className="flex justify-center drop-shadow-xl">
+            <button
+              onClick={handleClearCanvasClick}
+              className={`ml-1 mt-1 border border-black bg-white text-black px-4 py-2 rounded-lg ${!isCurrentPlayerDrawer() ? "opacity-50 cursor-not-allowed" : ""}`} // Disable button if not drawer
+              disabled={!isCurrentPlayerDrawer()} // Disable button if not drawer
+            >
+              Clear
+            </button>
           </div>
         </div>
       </div>

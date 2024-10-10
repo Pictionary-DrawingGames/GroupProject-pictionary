@@ -11,11 +11,13 @@ export default function Chat({ socket, players }) {
     return savedScore ? parseInt(savedScore, 10) : 0;
   });
 
+  const username = localStorage.getItem("username");
+
   // Mendengarkan perubahan kata dari server
   useEffect(() => {
     socket.on("word:update", word => {
       setCurrentWord(word);
-      setHasAnsweredCorrectly(false);
+      setHasAnsweredCorrectly(false); // Reset state ketika kata berubah
     });
 
     return () => {
@@ -25,8 +27,10 @@ export default function Chat({ socket, players }) {
 
   const handleSendMessage = event => {
     event.preventDefault();
-    socket.emit("message:new", { answer, currentWord });
-    setAnswer("");
+    if (!hasAnsweredCorrectly) {
+      socket.emit("message:new", { answer, currentWord, username });
+      setAnswer("");
+    }
   };
 
   useEffect(() => {
@@ -41,20 +45,16 @@ export default function Chat({ socket, players }) {
     socket.on("message:update", newMessage => {
       setMessages(current => [...current, newMessage]);
 
-      console.log(newMessage);
-
-      // if (newMessage.correct && !hasAnsweredCorrectly) {
-      //   setScore(prevScore => prevScore + 20);
-      //   newMessage.correct = false;
-      //   setHasAnsweredCorrectly(true);
-      // }
+      if (newMessage.correct && newMessage.username === username) {
+        // Jika player ini yang menjawab benar, disable input mereka
+        setHasAnsweredCorrectly(true);
+      }
     });
 
     return () => {
       socket.off("message:update");
-      socket.disconnect();
     };
-  }, [socket, hasAnsweredCorrectly]);
+  }, [socket, username]);
 
   useEffect(() => {
     localStorage.setItem("userScore", score);
@@ -80,8 +80,19 @@ export default function Chat({ socket, players }) {
           </div>
           <div className="absolute bottom-1 p-4 w-full">
             <form className="w-full h-[45px] flex items-center justify-center rounded-md">
-              <input type="text" className="border-2 py-2 px-2 h-full w-full rounded-none rounded-l-md text-sm" placeholder="What's your guess?" value={answer} onChange={e => setAnswer(e.target.value)} />
-              <button className="flex items-center justify-center h-full px-4 bg-orange-500 rounded-none rounded-r-md" onClick={handleSendMessage}>
+              <input
+                type="text"
+                className="border-2 py-2 px-2 h-full w-full rounded-none rounded-l-md text-sm"
+                placeholder="What's your guess?"
+                value={answer}
+                onChange={e => setAnswer(e.target.value)}
+                disabled={hasAnsweredCorrectly} // Disable input jika player sudah benar
+              />
+              <button
+                className="flex items-center justify-center h-full px-4 bg-orange-500 rounded-none rounded-r-md"
+                onClick={handleSendMessage}
+                disabled={hasAnsweredCorrectly} // Disable button jika player sudah benar
+              >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="#ffffff" className="w-4 h-4">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
                 </svg>
