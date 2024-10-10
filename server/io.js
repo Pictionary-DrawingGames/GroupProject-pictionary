@@ -18,12 +18,12 @@ const io = new Server(server, {
   },
 });
 
-io.on("connection", socket => {
+io.on("connection", (socket) => {
   const id = uuidv4();
   console.log("A client has connected:", socket.id);
 
   // Event join
-  socket.on("join", data => {
+  socket.on("join", (data) => {
     players[socket.id] = {
       id: socket.id,
       name: data.payload.name,
@@ -47,7 +47,7 @@ io.on("connection", socket => {
   });
 
   // Event player ready
-  socket.on("ready", data => {
+  socket.on("ready", (data) => {
     const { action, payload } = data;
 
     if (action === "ready") {
@@ -83,7 +83,9 @@ io.on("connection", socket => {
     rounds += 1;
 
     if (rounds === Object.keys(players).length) {
-      players = Object.fromEntries(Object.entries(players).sort((a, b) => b[1].score - a[1].score));
+      players = Object.fromEntries(
+        Object.entries(players).sort((a, b) => b[1].score - a[1].score)
+      );
       io.emit("end", { players: players });
       status = "waiting";
       rounds = 0;
@@ -95,11 +97,14 @@ io.on("connection", socket => {
     }
 
     drawerIndex = (drawerIndex + 1) % Object.keys(players).length;
-    io.emit("next", { players: players, drawer: players[Object.keys(players)[drawerIndex]] });
+    io.emit("next", {
+      players: players,
+      drawer: players[Object.keys(players)[drawerIndex]],
+    });
   });
 
   // Event untuk mengatur kata yang akan ditebak
-  socket.on("word:chosen", word => {
+  socket.on("word:chosen", (word) => {
     io.emit("word:update", word);
   });
   // Event untuk mengatur kata yang akan ditebak
@@ -177,7 +182,7 @@ io.on("connection", socket => {
     }
   });
 
-  socket.on("drawing:data", data => {
+  socket.on("drawing:data", (data) => {
     // Mengirim data gambar ke semua klien (termasuk pengirim)
     io.emit("drawing:receive", data);
   });
@@ -188,7 +193,7 @@ io.on("connection", socket => {
   });
 
   // Mendengarkan perubahan timer dari klien
-  socket.on("timer:update", newSeconds => {
+  socket.on("timer:update", (newSeconds) => {
     // Kirim update ke semua klien yang terhubung
     io.emit("timer:update", newSeconds);
   });
@@ -202,7 +207,7 @@ io.on("connection", socket => {
 
 // Fungsi untuk memeriksa apakah semua pemain sudah siap
 function allPlayersReady() {
-  return Object.values(players).every(player => player.ready);
+  return Object.values(players).every((player) => player.ready);
 }
 
 // Fungsi untuk menghapus pemain saat mereka disconnect
@@ -223,7 +228,7 @@ function resetGame() {
   drawerIndex = 0;
 
   // Reset skor dan status correct semua pemain
-  Object.values(players).forEach(player => {
+  Object.values(players).forEach((player) => {
     player.correct = false;
     player.score = 0; // Reset skor jika diperlukan
     player.ready = false; // Reset status siap

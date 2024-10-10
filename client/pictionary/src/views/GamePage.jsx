@@ -8,8 +8,10 @@ import RevealWord from "../components/RevealWord";
 
 import Banner from "../assets/banner.png";
 import Background from "../assets/bg-repeat.png";
+import { themeContext } from "../context/themeContext.jsx";
 
 export default function GamePage({ socket }) {
+  const { currentTheme, theme, setCurrentTheme } = useContext(themeContext);
   const [seconds, setSeconds] = useState(30);
   const [currentWord, setCurrentWord] = useState("");
   const [players, setPlayers] = useState({});
@@ -114,20 +116,36 @@ export default function GamePage({ socket }) {
     const randomWord = getRandomWord();
     setCurrentWord(randomWord);
 
-    // Mengirim kata ke semua klien yang terhubung
     socket.emit("word:chosen", randomWord);
   }, []);
 
   useEffect(() => {
-    // Update players data from the server
-    socket.on("updatePlayers", playersData => {
+    // Listen for updated player data
+    socket.on("updatePlayers", (playersData) => {
       setPlayers(playersData);
       console.log("Pemain yang diterima dari server: ", playersData);
     });
 
-    // Clean up the event listener when component unmounts
+    // Listen for message updates and adjust scores
+    socket.on("message:update", ({ correct, username, message, score }) => {
+      if (correct) {
+        // Find the player and update their score
+        setPlayers((prevPlayers) => {
+          const updatedPlayers = { ...prevPlayers };
+          const player = Object.values(updatedPlayers).find(
+            (p) => p.name === username
+          );
+          if (player) {
+            player.score += 100; // Increment score
+          }
+          return updatedPlayers;
+        });
+      }
+    });
+
     return () => {
       socket.off("updatePlayers");
+      socket.off("message:update");
     };
   }, [socket]);
 
@@ -160,19 +178,44 @@ export default function GamePage({ socket }) {
       <div
         className="flex flex-col lg:flex-row items-center lg:items-start justify-between"
         style={{
-          backgroundImage: `url(${Background})`,
-          backgroundColor: "#f97316",
+          backgroundImage: theme[currentTheme]?.bgImage, // Set background image
+          backgroundColor: theme[currentTheme]?.bgColor,
         }}
       >
         <Players socket={socket} players={players} />
         <div className="flex flex-col items-center gap-y-2 w-full lg:w-[440px] h-full p-4">
+          {/* USE CONTEXT */}
+          {currentTheme == "male" ? (
+            <button
+              className="bg-white p-5"
+              onClick={() => setCurrentTheme("female")}
+            >
+              THEME FEMALE
+            </button>
+          ) : (
+            <button
+              className="bg-white p-5"
+              onClick={() => setCurrentTheme("male")}
+            >
+              THEME MALE
+            </button>
+          )}
+          {/* USE CONTEXT */}
+
           <div className="flex flex-col items-center gap-y-2 mb-8">
             <img src={Banner} alt="" className="w-[200px] md:w-[300px]" />
-            <p className="font-black rounded-xl bg-orange-950 p-2 text-white text-lg md:text-xl text-center">Manifest Your Creativity</p>
+            <p className="font-black rounded-xl bg-orange-950 p-2 text-white text-lg md:text-xl text-center">
+              Manifest Your Creativity
+            </p>
           </div>
           <div className="flex flex-col md:flex-row">
             <div className="mt-4 md:mt-0">
-              <DrawingBoard socket={socket} seconds={seconds} setSeconds={setSeconds} players={players} />
+              <DrawingBoard
+                socket={socket}
+                seconds={seconds}
+                setSeconds={setSeconds}
+                players={players}
+              />
             </div>
           </div>
         </div>

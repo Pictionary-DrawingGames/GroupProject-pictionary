@@ -9,4 +9,4 @@ import Avatar8 from "../assets/avatars/7.png";
 import Avatar9 from "../assets/avatars/8.png";
 import Avatar10 from "../assets/avatars/9.png";
 
-export const Avatars = [Avatar1, Avatar2, Avatar3, Avatar4, Avatar5, Avatar6, Avatar7, Avatar8, Avatar9, Avatar10];
+export const Avatars = [Avatar1, Avatar2];
