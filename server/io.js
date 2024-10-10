@@ -154,7 +154,7 @@ io.on("connection", socket => {
       let correct = false;
       if (answer === currentWord) {
         player.correct = true;
-        player.score += 50;
+        player.score += 20;
 
         io.emit("scoreUpdate", players);
 

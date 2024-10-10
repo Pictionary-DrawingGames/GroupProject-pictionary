@@ -230,13 +230,13 @@ export default function DrawingBoard({ socket, seconds, setSeconds }) {
             <div className="text-center mr-0 md:mr-1 mt-3 ml-1">
               <Timer socket={socket} seconds={seconds} setSeconds={setSeconds} />
             </div>
-            {/* Menampilkan nama dan avatar drawer */}
+            {/* Menampilkan nama dan avatar drawer
             {drawer && (
               <div className="flex flex-col items-center mt-2">
                 <img src={drawer.avatar} alt={drawer.name} className="w-12 h-12 rounded-full" />
                 <p className="text-lg font-semibold">{drawer.name}</p>
               </div>
-            )}
+            )} */}
           </div>
         </div>
       </div>
