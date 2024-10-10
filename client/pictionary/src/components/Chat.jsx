@@ -41,10 +41,13 @@ export default function Chat({ socket, players }) {
     socket.on("message:update", newMessage => {
       setMessages(current => [...current, newMessage]);
 
-      if (newMessage.correct && !hasAnsweredCorrectly) {
-        setScore(prevScore => prevScore + 20);
-        setHasAnsweredCorrectly(true);
-      }
+      console.log(newMessage);
+
+      // if (newMessage.correct && !hasAnsweredCorrectly) {
+      //   setScore(prevScore => prevScore + 20);
+      //   newMessage.correct = false;
+      //   setHasAnsweredCorrectly(true);
+      // }
     });
 
     return () => {

@@ -154,9 +154,9 @@ io.on("connection", socket => {
     console.log("Current players:", players);
 
     if (player) {
-      let correct = false;
+      // let correct = false;
       if (answer === currentWord) {
-        correct = true;
+        // correct = true;
         player.correct = true;
         player.score += 20;
 
@@ -174,7 +174,7 @@ io.on("connection", socket => {
         score: player.score,
         avatar: player.avatar,
         message: answer,
-        correct,
+        correct: player.correct,
       });
     } else {
       console.log(`Player not found for socket id: ${socket.id}`);
