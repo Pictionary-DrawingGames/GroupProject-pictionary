@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 
-export default function Timer({ socket, seconds, setSeconds }) {
+export default function Timer({ socket, seconds, setSeconds, totalSeconds }) {
   useEffect(() => {
     let intervalId;
 
@@ -13,7 +13,7 @@ export default function Timer({ socket, seconds, setSeconds }) {
           return newSeconds;
         });
       }, 1000);
-    } else if (seconds === 0) {
+    } else {
       clearInterval(intervalId);
     }
 
@@ -28,12 +28,15 @@ export default function Timer({ socket, seconds, setSeconds }) {
     };
   }, [seconds, socket, setSeconds]);
 
+  // Menghitung lebar garis berdasarkan waktu tersisa
+  const progressWidth = (seconds / totalSeconds) * 100;
+
   return (
-    <>
-      <div className="flex flex-col gap-y-1 w-full md:w-32 lg:w-32 justify-center items-center bg-white p-2 border-2 border-[#431407] rounded-lg">
-        <p className="font-bold text-orange-500 text-xs">TIME</p>
-        <p>{seconds} seconds left</p>
+    <div className="flex flex-col items-center mt-3">
+      <div className="relative w-full h-2 bg-gray-300 rounded">
+        <div style={{ width: `${progressWidth}%` }} className="h-full bg-green-500 rounded"></div>
       </div>
-    </>
+      <p className="mt-1 text-sm">{seconds} seconds left</p>
+    </div>
   );
 }

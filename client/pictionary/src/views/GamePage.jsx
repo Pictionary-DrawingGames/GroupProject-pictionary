@@ -1,33 +1,31 @@
 import React, { useContext, useState, useEffect } from "react";
 import Chat from "../components/Chat";
 import DrawingBoard from "../components/DrawingBoard";
-import StaticBoard from "../components/StaticBoard";
-import Timer from "../components/Timer";
 import Players from "../components/Players";
 import RevealWord from "../components/RevealWord";
 
 import Banner from "../assets/banner.png";
-import Background from "../assets/bg-repeat.png";
 import { themeContext } from "../context/themeContext.jsx";
 
 export default function GamePage({ socket }) {
-  const { currentTheme, theme, setCurrentTheme } = useContext(themeContext);
-  const [seconds, setSeconds] = useState(30);
+  const { currentTheme, theme } = useContext(themeContext);
+  const [seconds, setSeconds] = useState(35);
   const [currentWord, setCurrentWord] = useState("");
+  const [previousWord, setPreviousWord] = useState("");
+  const [wordIndex, setWordIndex] = useState(0);
   const [players, setPlayers] = useState({});
+  const [isWordRevealed, setIsWordRevealed] = useState(false);
 
   const words = [
     "apple",
     "house",
     "sun",
-    "tree",
     "flower",
     "car",
     "boat",
     "plane",
     "dog",
     "cat",
-    "umbrella",
     "heart",
     "figure",
     "cake",
@@ -39,16 +37,9 @@ export default function GamePage({ socket }) {
     "book",
     "chair",
     "table",
-    "scissors",
-    "bulb",
     "ladder",
     "skateboard",
     "bicycle",
-    "tent",
-    "burger",
-    "cone",
-    "pizza",
-    "butterfly",
     "bird",
     "fish",
     "moon",
@@ -71,74 +62,18 @@ export default function GamePage({ socket }) {
     "watch",
     "phone",
     "camera",
-    "computer",
-    "laptop",
-    "mouse",
-    "keyboard",
-    "printer",
-    "television",
-    "radio",
-    "microwave",
-    "oven",
-    "fridge",
-    "toilet",
-    "bath",
-    "shower",
-    "sink",
-    "bed",
-    "pillow",
-    "chair",
-    "table",
-    "desk",
-    "lamp",
-    "mirror",
-    "vase",
-    "bowl",
-    "plate",
-    "cup",
-    "mug",
-    "fork",
-    "spoon",
-    "knife",
-    "bottle",
-    "box",
-    "carton",
-    "paper",
-    "pen",
-    "pencil",
-    "ruler",
   ];
 
-  // Pilih kata secara acak dan kirim ke server
-  const getRandomWord = () => words[Math.floor(Math.random() * words.length)];
+  useEffect(() => {
+    const initialWord = words[wordIndex];
+    setCurrentWord(initialWord);
+    setPreviousWord(initialWord);
+    socket.emit("word:chosen", initialWord);
+  }, [wordIndex, socket]);
 
   useEffect(() => {
-    const randomWord = getRandomWord();
-    setCurrentWord(randomWord);
-
-    socket.emit("word:chosen", randomWord);
-  }, []);
-
-  useEffect(() => {
-    // Listen for updated player data
     socket.on("updatePlayers", playersData => {
       setPlayers(playersData);
-      console.log("Pemain yang diterima dari server: ", playersData);
-    });
-
-    // Listen for message updates and adjust scores
-    socket.on("message:update", ({ correct, username, message, score }) => {
-      if (correct) {
-        // Find the player and update their score
-        setPlayers(prevPlayers => {
-          const updatedPlayers = { ...prevPlayers };
-          const player = Object.values(updatedPlayers).find(p => p.name === username);
-          if (player) {
-            player.score += 100; // Increment score
-          }
-          return updatedPlayers;
-        });
-      }
     });
 
     return () => {
@@ -148,35 +83,44 @@ export default function GamePage({ socket }) {
   }, [socket]);
 
   useEffect(() => {
-    // Atur ulang kata dan timer setiap kali waktu habis
-    if (seconds === 0) {
-      const randomWord = getRandomWord();
-      setCurrentWord(randomWord);
-      setSeconds(30); // Reset the timer to 30
+    const timer = setInterval(() => {
+      if (!isWordRevealed && seconds > 0) {
+        setSeconds(prev => prev - 1);
+      }
+    }, 5000);
 
-      // Mengirim kata baru ke semua klien yang terhubung
-      socket.emit("word:chosen", randomWord);
-    }
-  }, [seconds, socket]);
+    return () => clearInterval(timer);
+  }, [seconds, isWordRevealed]);
 
-  // Ini akan mencegah timer stuck di -1
   useEffect(() => {
-    if (seconds < 0) {
-      setSeconds(30); // Reset to 30 if it goes negative
+    if (seconds === 0) {
+      setIsWordRevealed(true);
+      setCurrentWord(previousWord);
+      socket.emit("word:chosen", previousWord);
+
+      setTimeout(() => {
+        setIsWordRevealed(false);
+        setSeconds(35);
+        setWordIndex(prevIndex => (prevIndex + 1) % words.length);
+      }, 6000);
     }
-  }, [seconds]);
+  }, [seconds, previousWord, socket]);
 
   useEffect(() => {
     socket.emit("players", players);
-    console.log("Current players state: ", players); // Log current players state
-  }, [players]);
+  }, [players, socket]);
+
+  // Function to close the modal
+  const closeModal = () => {
+    setIsWordRevealed(false);
+  };
 
   return (
     <>
       <div
         className="flex flex-col lg:flex-row items-center lg:items-start justify-between"
         style={{
-          backgroundImage: theme[currentTheme]?.bgImage, // Set background image
+          backgroundImage: theme[currentTheme]?.bgImage,
           backgroundColor: theme[currentTheme]?.bgColor,
         }}
       >
@@ -188,9 +132,10 @@ export default function GamePage({ socket }) {
           </div>
           <div className="flex flex-col md:flex-row">
             <div className="mt-4 md:mt-0">
-              <DrawingBoard socket={socket} seconds={seconds} setSeconds={setSeconds} players={players} />
+              <DrawingBoard socket={socket} seconds={seconds} setSeconds={setSeconds} players={players} isWordRevealed={isWordRevealed} />
             </div>
           </div>
+          {isWordRevealed && <RevealWord word={previousWord} onClose={closeModal} />}
         </div>
         <Chat socket={socket} players={players} />
       </div>

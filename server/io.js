@@ -32,7 +32,7 @@ io.on("connection", socket => {
       score: 0,
       correct: false,
     };
-    console.log(players);
+    // console.log(players);
 
     // Broadcast pemain yang sudah bergabung kepada semua klien
     io.emit("updatePlayers", players);
@@ -53,7 +53,7 @@ io.on("connection", socket => {
     if (action === "ready") {
       if (players[payload.playerId]) {
         players[payload.playerId].ready = true;
-        console.log(`Player ${payload.playerId} is ready`);
+        // console.log(`Player ${payload.playerId} is ready`);
 
         // Emit update ke semua klien
         io.emit("updatePlayers", players);
@@ -70,7 +70,7 @@ io.on("connection", socket => {
     } else if (action === "cancelReady") {
       if (players[payload.playerId]) {
         players[payload.playerId].ready = false;
-        console.log(`Player ${payload.playerId} canceled readiness`);
+        // console.log(`Player ${payload.playerId} canceled readiness`);
 
         io.emit("updatePlayers", players);
       }
@@ -103,55 +103,19 @@ io.on("connection", socket => {
 
   // Event untuk mengatur kata yang akan ditebak
   socket.on("word:chosen", word => {
+    for (const playerId in players) {
+      players[playerId].correct = false; // Reset correct status untuk pemain ini
+    }
+
     io.emit("word:update", word);
+    io.emit("updatePlayers", players);
   });
-  // Event untuk mengatur kata yang akan ditebak
-
-  // Event untuk memperbarui skor pemain secara real-time
-  // socket.on("incrementScore", playerId => {
-  //   if (players[playerId]) {
-  //     players[playerId].score += 10; // Tambah 10 poin ke pemain
-  //     console.log(`Player ${playerId} score updated:`, players[playerId].score);
-
-  //     // Kirim pembaruan skor ke semua klien
-  //     io.emit("scoreUpdate", players);
-  //   }
-  // });
-
-  // Event untuk menerima jawaban pemain dan mengupdate skor
-  // socket.on("message:new", ({ answer, currentWord }) => {
-  //   let correct = false;
-  //   if (answer === currentWord) {
-  //     // Set player correct
-  //     players[socket.id].correct = true;
-  //     players[socket.id].score += 50; // Misal tambahkan 20 poin untuk jawaban benar
-
-  //     // Emit pembaruan skor ke semua klien
-  //     io.emit("scoreUpdate", players);
-
-  //     // Cek apakah pemain mencapai skor 100
-  //     if (players[socket.id].score >= 100) {
-  //       // Emit event gameOver ke semua pemain
-  //       io.emit("gameOver", { winner: players[socket.id] });
-
-  //       // Reset permainan
-  //       resetGame();
-  //       return;
-  //     }
-  //   }
-
-  //   io.emit("message:update", {
-  //     username: players[socket.id].name,
-  //     score: players[socket.id].score,
-  //     avatar: players[socket.id].avatar,
-  //     message: answer,
-  //     correct,
-  //   });
-  // });
 
   socket.on("message:new", ({ answer, currentWord }) => {
     const player = players[socket.id];
-    console.log("Current players:", players);
+    // console.log("Current players:", players);
+    // console.log(answer, "ini anserw");
+    // console.log(currentWord, "ini crr");
 
     if (player) {
       // let correct = false;
