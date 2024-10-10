@@ -121,7 +121,7 @@ export default function GamePage({ socket }) {
 
   useEffect(() => {
     // Listen for updated player data
-    socket.on("updatePlayers", (playersData) => {
+    socket.on("updatePlayers", playersData => {
       setPlayers(playersData);
       console.log("Pemain yang diterima dari server: ", playersData);
     });
@@ -130,11 +130,9 @@ export default function GamePage({ socket }) {
     socket.on("message:update", ({ correct, username, message, score }) => {
       if (correct) {
         // Find the player and update their score
-        setPlayers((prevPlayers) => {
+        setPlayers(prevPlayers => {
           const updatedPlayers = { ...prevPlayers };
-          const player = Object.values(updatedPlayers).find(
-            (p) => p.name === username
-          );
+          const player = Object.values(updatedPlayers).find(p => p.name === username);
           if (player) {
             player.score += 100; // Increment score
           }
@@ -184,38 +182,13 @@ export default function GamePage({ socket }) {
       >
         <Players socket={socket} players={players} />
         <div className="flex flex-col items-center gap-y-2 w-full lg:w-[440px] h-full p-4">
-          {/* USE CONTEXT */}
-          {currentTheme == "male" ? (
-            <button
-              className="bg-white p-5"
-              onClick={() => setCurrentTheme("female")}
-            >
-              THEME FEMALE
-            </button>
-          ) : (
-            <button
-              className="bg-white p-5"
-              onClick={() => setCurrentTheme("male")}
-            >
-              THEME MALE
-            </button>
-          )}
-          {/* USE CONTEXT */}
-
           <div className="flex flex-col items-center gap-y-2 mb-8">
             <img src={Banner} alt="" className="w-[200px] md:w-[300px]" />
-            <p className="font-black rounded-xl bg-orange-950 p-2 text-white text-lg md:text-xl text-center">
-              Manifest Your Creativity
-            </p>
+            <p className="font-black rounded-xl bg-orange-950 p-2 text-white text-lg md:text-xl text-center">Manifest Your Creativity</p>
           </div>
           <div className="flex flex-col md:flex-row">
             <div className="mt-4 md:mt-0">
-              <DrawingBoard
-                socket={socket}
-                seconds={seconds}
-                setSeconds={setSeconds}
-                players={players}
-              />
+              <DrawingBoard socket={socket} seconds={seconds} setSeconds={setSeconds} players={players} />
             </div>
           </div>
         </div>

@@ -1,7 +1,8 @@
 import { createContext, useState } from "react";
 import MaleBackground from "../assets/bg-repeat.png"; // Background image
 import FemaleBackground from "../assets/bg-repeat-1.png"; // Background image
-import { Avatars } from "../lib/utils"; // Ensure the correct path for Avatars
+import Avatar from "../assets/avatars/0.png"; // Default avatar
+import Avatar2 from "../assets/avatars/1.png"; // Default avatar
 
 export const themeContext = createContext({
   currentTheme: "",
@@ -32,12 +33,12 @@ export default function ThemeProvider({ children }) {
           male: {
             bgImage: `url(${MaleBackground})`, // Set background image
             bgColor: "#09a3fa",
-            // userAvatar: Avatars[0],
+            userAvatar: Avatar,
           },
           female: {
             bgImage: `url(${FemaleBackground})`, // Set background image
             bgColor: "#ff6bf9",
-            // userAvatar: Avatars[1],
+            userAvatar: Avatar2,
           },
         },
       }}
