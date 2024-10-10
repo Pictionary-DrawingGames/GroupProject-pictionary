@@ -5,6 +5,7 @@ import PlayersLabel from "../assets/players.png";
 
 export default function Players({ socket }) {
   const [currentPlayer, setCurrentPlayer] = useState({
+    id: "", // Tambahkan id di state player untuk pencocokan
     name: "",
     avatar: Avatars,
     score: 0,
@@ -19,7 +20,9 @@ export default function Players({ socket }) {
     const userAvatar = localStorage.getItem("userAvatar") || Avatars;
     const userId = localStorage.getItem("userId") || null; // Tambahkan id pengguna
 
+    // Data player lokal
     const playerData = {
+      id: socket.id, // Ambil id socket sebagai identifikasi unik
       name: username,
       avatar: userAvatar,
       score: parseInt(userScore, 10) || 0,
@@ -28,20 +31,25 @@ export default function Players({ socket }) {
 
     setCurrentPlayer(playerData);
 
-    // Kirim data pengguna ke server menggunakan event 'players'
-    socket.emit("players", {
+    // Emit join event ke server ketika komponen mount
+    socket.emit("join", {
       payload: playerData,
     });
 
     // Menerima pembaruan pemain dari server
     socket.on("updatePlayers", (updatedPlayers) => {
       setPlayers(updatedPlayers);
-      console.log("Updated players:", updatedPlayers);
+    });
+
+    // Menerima pembaruan skor dari server
+    socket.on("scoreUpdate", (updatedPlayers) => {
+      setPlayers(updatedPlayers); // Memperbarui daftar pemain dengan skor terbaru
     });
 
     return () => {
       // Hapus listener saat komponen unmount
       socket.off("updatePlayers");
+      socket.off("scoreUpdate");
     };
   }, [socket]);
 
@@ -60,11 +68,13 @@ export default function Players({ socket }) {
                 <img src={player.avatar} alt="avatar" width={40} />
                 <div className="flex flex-col">
                   <p className="font-bold text-slate-700">
-                    {player.name} {player.id === currentPlayer.id ? "✅" : ""}
+                    {player.name} {player.id === currentPlayer.id ? "✅" : ""}{" "}
+                    {/* Menandai pemain saat ini */}
                   </p>
                   <p className="text-xs text-slate-500">
                     {player.score} points
-                  </p>
+                  </p>{" "}
+                  {/* Menampilkan skor terbaru */}
                 </div>
               </div>
               <img src={Pencil} alt="draw-icon" width={25} />
