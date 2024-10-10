@@ -11,6 +11,7 @@ export const SocketProvider = ({ children, setEndGame }) => {
   const [drawer, setDrawer] = useState(null);
   const [word, setWord] = useState(null);
   const [end, setEnd] = useState(false);
+  const [messages, setMessages] = useState([]); // Tambahkan state untuk menyimpan pesan
 
   // Koneksi ke server menggunakan socket.io
   const connectToServer = () => {
@@ -20,19 +21,19 @@ export const SocketProvider = ({ children, setEndGame }) => {
       console.log("Connected to the server");
     });
 
-    newSocket.on("join", data => {
+    newSocket.on("join", (data) => {
       if (data.payload) {
         setPlayers(data.payload.players);
         setSocketData(data); // Set structured socket data
       }
     });
 
-    newSocket.on("get_id", data => {
+    newSocket.on("get_id", (data) => {
       setUserId(data.payload.id);
       setSocketData(data); // Set structured socket data
     });
 
-    newSocket.on("next", data => {
+    newSocket.on("next", (data) => {
       if (data.payload) {
         setDrawer(data.payload.drawer);
         setPlayers(data.payload.players);
@@ -42,23 +43,26 @@ export const SocketProvider = ({ children, setEndGame }) => {
       }
     });
 
-    newSocket.on("set_word", data => {
+    newSocket.on("set_word", (data) => {
       if (data.payload) {
         setWord(data.payload.word);
         setSocketData(data); // Set structured socket data
       } else {
-        console.error("Payload is null or undefined for 'set_word' event:", data);
+        console.error(
+          "Payload is null or undefined for 'set_word' event:",
+          data
+        );
       }
     });
 
-    newSocket.on("score", data => {
+    newSocket.on("score", (data) => {
       if (data.payload) {
         setPlayers(data.payload.players);
         setSocketData(data); // Set structured socket data
       }
     });
 
-    newSocket.on("end", data => {
+    newSocket.on("end", (data) => {
       if (data.payload) {
         setEndGame(true);
         setPlayers(data.payload.players);
@@ -67,11 +71,33 @@ export const SocketProvider = ({ children, setEndGame }) => {
       }
     });
 
+    // Tangkap event 'message:update'
+    newSocket.on("message:update", (data) => {
+      if (data) {
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          {
+            username: data.username,
+            message: data.message,
+            correct: data.correct,
+          },
+        ]);
+        // Bisa tampilkan pesan atau lakukan apapun sesuai kebutuhan
+      }
+    });
+
+    // Tangkap event 'updatePlayers' untuk memperbarui skor
+    newSocket.on("updatePlayers", (data) => {
+      if (data) {
+        setPlayers(data); // Update pemain dan skor
+      }
+    });
+
     newSocket.on("disconnect", () => {
       console.log("Disconnected from the server");
     });
 
-    newSocket.on("error", err => {
+    newSocket.on("error", (err) => {
       console.error("Socket error:", err);
     });
 
@@ -90,7 +116,7 @@ export const SocketProvider = ({ children, setEndGame }) => {
   }, [setEndGame]);
 
   // Mengirim data ke server menggunakan socket.io
-  const sendData = data => {
+  const sendData = (data) => {
     if (socket && data && data.action) {
       // Emit sesuai action
       socket.emit(data.action, data);
@@ -113,6 +139,7 @@ export const SocketProvider = ({ children, setEndGame }) => {
         setPlayers,
         sendData,
         connectToServer,
+        messages, // Sediakan state untuk pesan
       }}
     >
       {children}

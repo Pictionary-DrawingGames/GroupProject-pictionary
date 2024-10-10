@@ -1,11 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import Avatar from "../assets/avatars/0.png"; // Default avatar
 import Banner from "../assets/banner.png"; // Banner image
 import Background from "../assets/bg-repeat.png"; // Background image
 import { Avatars } from "../lib/utils"; // Ensure the correct path for Avatars
 import { useNavigate } from "react-router-dom";
+import { themeContext } from "../context/themeContext.jsx";
 
 export default function MainPage({ socket }) {
+  const { currentTheme, theme, setCurrentTheme } = useContext(themeContext);
   const navigate = useNavigate();
   const [viewAvatars, setViewAvatars] = useState(false);
   const [selectedAvatar, setSelectedAvatar] = useState(0); // Avatar index
@@ -57,10 +59,28 @@ export default function MainPage({ socket }) {
     <div
       className="flex flex-col items-center w-screen h-screen bg-repeat gap-y-5"
       style={{
-        backgroundImage: `url(${Background})`, // Set background image
-        backgroundColor: "#f97316",
+        backgroundImage: theme[currentTheme]?.bgImage, // Set background image
+        backgroundColor: theme[currentTheme]?.bgColor,
       }}
     >
+      {/* USE CONTEXT */}
+      {currentTheme == "male" ? (
+        <button
+          className="bg-white p-5"
+          onClick={() => setCurrentTheme("female")}
+        >
+          THEME FEMALE
+        </button>
+      ) : (
+        <button
+          className="bg-white p-5"
+          onClick={() => setCurrentTheme("male")}
+        >
+          THEME MALE
+        </button>
+      )}
+      {/* USE CONTEXT */}
+
       <div className="flex flex-col items-center gap-y-2 mb-4">
         <img src={Banner} alt="" width={600} className="mt-[50px]" />
         <p className="font-black rounded-xl bg-orange-950 p-2 text-white text-lg md:text-xl text-center">Manifest Your Creativity</p>
