@@ -118,10 +118,22 @@ io.on("connection", socket => {
   socket.on("message:new", ({ answer, currentWord }) => {
     let correct = false;
     if (answer === currentWord) {
-      // correct = true;
+      // Set player correct
       players[socket.id].correct = true;
-      players[socket.id].score += 20; // Misal tambahkan 50 poin untuk jawaban benar
-      io.emit("scoreUpdate", players); // Kirim pembaruan skor
+      players[socket.id].score += 50; // Misal tambahkan 20 poin untuk jawaban benar
+
+      // Emit pembaruan skor ke semua klien
+      io.emit("scoreUpdate", players);
+
+      // Cek apakah pemain mencapai skor 100
+      if (players[socket.id].score >= 100) {
+        // Emit event gameOver ke semua pemain
+        io.emit("gameOver", { winner: players[socket.id] });
+
+        // Reset permainan
+        resetGame();
+        return;
+      }
     }
 
     io.emit("message:update", {
@@ -170,6 +182,23 @@ function removePlayer(socket, id) {
   if (allPlayersReady()) {
     io.emit("start", { players: players });
   }
+}
+
+// Fungsi untuk reset game setelah pemain mencapai skor maksimal
+function resetGame() {
+  status = "waiting"; // Mengembalikan status ke 'waiting'
+  rounds = 0;
+  drawerIndex = 0;
+
+  // Reset skor dan status correct semua pemain
+  Object.values(players).forEach(player => {
+    player.correct = false;
+    player.score = 0; // Reset skor jika diperlukan
+    player.ready = false; // Reset status siap
+  });
+
+  // Emit updatePlayers ke semua klien untuk memperbarui status pemain
+  io.emit("updatePlayers", players);
 }
 
 // Memulai server pada port yang ditentukan

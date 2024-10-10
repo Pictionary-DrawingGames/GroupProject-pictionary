@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Pencil from "../assets/pencil.png";
 import Avatars from "../assets/avatars/0.png";
 import PlayersLabel from "../assets/players.png";
+import { useNavigate } from "react-router-dom";
 
 export default function Players({ socket }) {
   const [currentPlayer, setCurrentPlayer] = useState({
@@ -11,6 +12,7 @@ export default function Players({ socket }) {
     score: 0,
   });
   const [players, setPlayers] = useState({}); // Menyimpan semua pemain
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Ambil data pengguna dari localStorage
@@ -43,12 +45,18 @@ export default function Players({ socket }) {
       setPlayers(updatedPlayers); // Memperbarui daftar pemain dengan skor terbaru
     });
 
+    // Mendengarkan event gameOver dari server
+    socket.on("gameOver", ({ winner }) => {
+      console.log("Game over! Winner:", winner);
+      navigate("/final", { state: { winner } }); // Navigasi ke FinalPage dan kirim data pemenang
+    });
+
     return () => {
-      // Hapus listener saat komponen unmount
       socket.off("updatePlayers");
       socket.off("scoreUpdate");
+      socket.off("gameOver"); // Hapus listener untuk gameOver
     };
-  }, [socket]);
+  }, [socket, navigate]);
 
   return (
     <div className="flex flex-col w-full lg:w-[280px] lg:h-screen md:h-screen">
