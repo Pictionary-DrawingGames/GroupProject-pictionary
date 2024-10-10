@@ -7,7 +7,7 @@ export default function Timer({ socket, seconds, setSeconds }) {
     // Emit perubahan seconds setiap detik
     if (seconds > 0) {
       intervalId = setInterval(() => {
-        setSeconds((prevSeconds) => {
+        setSeconds(prevSeconds => {
           const newSeconds = prevSeconds - 1;
           socket.emit("timer:update", newSeconds); // Emit perubahan waktu ke server
           return newSeconds;
@@ -18,7 +18,7 @@ export default function Timer({ socket, seconds, setSeconds }) {
     }
 
     // Mendengarkan perubahan waktu dari server
-    socket.on("timer:update", (newSeconds) => {
+    socket.on("timer:update", newSeconds => {
       setSeconds(newSeconds); // Update nilai waktu berdasarkan data dari server
     });
 

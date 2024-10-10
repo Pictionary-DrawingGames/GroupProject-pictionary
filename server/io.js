@@ -102,6 +102,7 @@ io.on("connection", socket => {
   socket.on("word:chosen", word => {
     io.emit("word:update", word);
   });
+  // Event untuk mengatur kata yang akan ditebak
 
   // Event untuk memperbarui skor pemain secara real-time
   // socket.on("incrementScore", playerId => {
@@ -115,34 +116,65 @@ io.on("connection", socket => {
   // });
 
   // Event untuk menerima jawaban pemain dan mengupdate skor
+  // socket.on("message:new", ({ answer, currentWord }) => {
+  //   let correct = false;
+  //   if (answer === currentWord) {
+  //     // Set player correct
+  //     players[socket.id].correct = true;
+  //     players[socket.id].score += 50; // Misal tambahkan 20 poin untuk jawaban benar
+
+  //     // Emit pembaruan skor ke semua klien
+  //     io.emit("scoreUpdate", players);
+
+  //     // Cek apakah pemain mencapai skor 100
+  //     if (players[socket.id].score >= 100) {
+  //       // Emit event gameOver ke semua pemain
+  //       io.emit("gameOver", { winner: players[socket.id] });
+
+  //       // Reset permainan
+  //       resetGame();
+  //       return;
+  //     }
+  //   }
+
+  //   io.emit("message:update", {
+  //     username: players[socket.id].name,
+  //     score: players[socket.id].score,
+  //     avatar: players[socket.id].avatar,
+  //     message: answer,
+  //     correct,
+  //   });
+  // });
+
   socket.on("message:new", ({ answer, currentWord }) => {
-    let correct = false;
-    if (answer === currentWord) {
-      // Set player correct
-      players[socket.id].correct = true;
-      players[socket.id].score += 50; // Misal tambahkan 20 poin untuk jawaban benar
+    const player = players[socket.id];
+    console.log("Current players:", players);
 
-      // Emit pembaruan skor ke semua klien
-      io.emit("scoreUpdate", players);
+    if (player) {
+      let correct = false;
+      if (answer === currentWord) {
+        player.correct = true;
+        player.score += 50;
 
-      // Cek apakah pemain mencapai skor 100
-      if (players[socket.id].score >= 100) {
-        // Emit event gameOver ke semua pemain
-        io.emit("gameOver", { winner: players[socket.id] });
+        io.emit("scoreUpdate", players);
 
-        // Reset permainan
-        resetGame();
-        return;
+        if (player.score >= 100) {
+          io.emit("gameOver", { winner: player });
+          resetGame();
+          return;
+        }
       }
-    }
 
-    io.emit("message:update", {
-      username: players[socket.id].name,
-      score: players[socket.id].score,
-      avatar: players[socket.id].avatar,
-      message: answer,
-      correct,
-    });
+      io.emit("message:update", {
+        username: player.name,
+        score: player.score,
+        avatar: player.avatar,
+        message: answer,
+        correct,
+      });
+    } else {
+      console.log(`Player not found for socket id: ${socket.id}`);
+    }
   });
 
   socket.on("drawing:data", data => {
