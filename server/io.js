@@ -1,10 +1,10 @@
 const express = require("express");
 const app = express();
-const PORT = 3000;
 const { createServer } = require("node:http");
 const { v4: uuidv4 } = require("uuid");
 const { Server } = require("socket.io");
 
+const PORT = 3000;
 let players = {};
 let drawerIndex = 0;
 let gotCorrect = 0;
@@ -12,17 +12,17 @@ let rounds = 0;
 let status = "waiting";
 
 const server = createServer(app);
-const io = new Server(3000, {
+const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: "http://localhost:5173", // Ganti dengan port front-end Anda jika perlu
   },
 });
 
 io.on("connection", socket => {
   const id = uuidv4();
-  console.log("A client has connected.");
+  console.log("A client has connected:", socket.id);
 
-  // join
+  // Event join
   socket.on("join", data => {
     players[socket.id] = {
       id: socket.id,
@@ -38,51 +38,43 @@ io.on("connection", socket => {
     io.emit("updatePlayers", players);
   });
 
-  // player ready
+  // Event player ready
   socket.on("ready", data => {
     const { action, payload } = data;
 
     if (action === "ready") {
-      // Pastikan pemain yang terhubung terdaftar di players
       if (players[payload.playerId]) {
-        players[payload.playerId].ready = true; // Ubah status ready pemain menjadi true
+        players[payload.playerId].ready = true;
         console.log(`Player ${payload.playerId} is ready`);
 
-        // Emit update kepada semua klien tentang status pemain
-        io.emit("updatePlayers", players); // Kirim semua data pemain termasuk status siap
+        // Emit update ke semua klien
+        io.emit("updatePlayers", players);
 
-        // Cek apakah semua pemain sudah siap
         if (allPlayersReady()) {
-          // Jika semua pemain sudah siap, mulai permainan
           io.emit("startGame", { players: players });
-          // io.emit("play", { players: players });
           io.emit("next", {
             players: players,
-            drawer: players[Object.keys(players)[drawerIndex]], // Ganti drawerIndex sesuai kebutuhan
+            drawer: players[Object.keys(players)[drawerIndex]],
           });
-          status = "playing"; // Ubah status permainan menjadi "playing"
+          status = "playing";
         }
-      } else {
-        console.log("Player not found in players object.");
       }
     } else if (action === "cancelReady") {
-      // Jika aksi adalah membatalkan kesiapan
       if (players[payload.playerId]) {
-        players[payload.playerId].ready = false; // Ubah status ready pemain menjadi false
+        players[payload.playerId].ready = false;
         console.log(`Player ${payload.playerId} canceled readiness`);
 
-        // Emit update kepada semua klien tentang status pemain
-        io.emit("updatePlayers", players); // Kirim semua data pemain termasuk status siap
+        io.emit("updatePlayers", players);
       }
     }
   });
 
-  // mengatur putaran permainan
+  // Event untuk putaran permainan berikutnya
   socket.on("next", () => {
     gotCorrect = 0;
     rounds += 1;
 
-    if (rounds == Object.keys(players).length) {
+    if (rounds === Object.keys(players).length) {
       players = Object.fromEntries(Object.entries(players).sort((a, b) => b[1].score - a[1].score));
       io.emit("end", { players: players });
       status = "waiting";
@@ -98,75 +90,37 @@ io.on("connection", socket => {
     io.emit("next", { players: players, drawer: players[Object.keys(players)[drawerIndex]] });
   });
 
-  // mengatur kata
-  socket.on("set_word", payload => {
-    io.emit("set_word", { word: payload.word });
+  // Event untuk mengatur kata yang akan ditebak
+  socket.on("word:chosen", word => {
+    io.emit("word:update", word);
   });
 
-  // Event 'join'
-  socket.on("players", data => {
-    if (!data || !data.payload) {
-      console.error("Data or payload is undefined:", data);
-      return;
+  // Event untuk memperbarui skor pemain secara real-time
+  socket.on("incrementScore", playerId => {
+    if (players[playerId]) {
+      players[playerId].score += 10; // Tambah 10 poin ke pemain
+      console.log(`Player ${playerId} score updated:`, players[playerId].score);
+
+      // Kirim pembaruan skor ke semua klien
+      io.emit("scoreUpdate", players);
     }
-
-    const { name, avatar, score } = data.payload;
-
-    if (!name || !avatar || score === undefined) {
-      console.error("Name, avatar, or score is missing in the payload:", data.payload);
-      return;
-    }
-
-    // Menyimpan pemain dengan data yang diterima dari client
-    players[socket.id] = {
-      id: socket.id,
-      name: name,
-      avatar: avatar,
-      score: parseInt(score, 10) || 0,
-      ready: false,
-      correct: false,
-    };
-
-    console.log("Current players:", players);
-
-    // Emit pemain yang sudah bergabung kepada semua klien
-    io.emit("updatePlayers", players);
   });
 
-  // pesan dari pemain (baru)
-  // socket.on("message", payload => {
-  //   const { correct, drawerId, timeGuessed } = payload;
-  //   if (correct) {
-  //     players[id].correct = true;
-  //     players[id].score += (Object.keys(players).length - gotCorrect - 1) * 10 + timeGuessed;
-  //     players[drawerId].score += 10;
-  //     gotCorrect += 1;
-  //     io.emit("score", { players: players });
-  //   }
-
-  //   io.emit("message", payload);
-  // });
-
-  // pemain disconnect
-  socket.on("disconnect", () => {
-    console.log("A client has disconnected.");
-    removePlayer(socket, socket.id);
-  });
-
+  // Event untuk menerima jawaban pemain dan mengupdate skor
   socket.on("message:new", ({ answer, currentWord }) => {
-    let message = answer;
     let correct = false;
-
-    // Logika untuk memeriksa apakah jawaban benar
-    if (answer == currentWord) {
+    if (answer === currentWord) {
       correct = true;
+      players[socket.id].correct = true;
+      players[socket.id].score += 20; // Misal tambahkan 50 poin untuk jawaban benar
+      io.emit("scoreUpdate", players); // Kirim pembaruan skor
     }
 
     io.emit("message:update", {
-      username: socket.handshake.auth.username,
-      score: socket.handshake.auth.score,
-      avatar: socket.handshake.auth.avatar,
-      message,
+      username: players[socket.id].name,
+      score: players[socket.id].score,
+      avatar: players[socket.id].avatar,
+      message: answer,
       correct,
     });
   });
@@ -187,18 +141,19 @@ io.on("connection", socket => {
     io.emit("timer:update", newSeconds);
   });
 
-  // Menerima kata yang dipilih dan mengirimnya ke semua klien
-  socket.on("word:chosen", word => {
-    io.emit("word:update", word);
+  // Event ketika pemain disconnect
+  socket.on("disconnect", () => {
+    console.log("A client has disconnected:", socket.id);
+    removePlayer(socket, socket.id);
   });
 });
 
-// cek semua pemain ready
+// Fungsi untuk memeriksa apakah semua pemain sudah siap
 function allPlayersReady() {
   return Object.values(players).every(player => player.ready);
 }
 
-// hapus pemain jika disconnect
+// Fungsi untuk menghapus pemain saat mereka disconnect
 function removePlayer(socket, id) {
   const player_left = players[id];
   delete players[id];
@@ -209,6 +164,7 @@ function removePlayer(socket, id) {
   }
 }
 
-// server.listen(PORT, () => {
-//   console.log(`i love u ${PORT}`);
-// });
+// Memulai server pada port yang ditentukan
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
