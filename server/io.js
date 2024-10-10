@@ -36,6 +36,14 @@ io.on("connection", socket => {
 
     // Broadcast pemain yang sudah bergabung kepada semua klien
     io.emit("updatePlayers", players);
+
+    if (status === "playing") {
+      socket.emit("startGame", { players: players });
+      socket.emit("next", {
+        players: players,
+        drawer: players[Object.keys(players)[drawerIndex]],
+      });
+    }
   });
 
   // Event player ready
@@ -96,21 +104,21 @@ io.on("connection", socket => {
   });
 
   // Event untuk memperbarui skor pemain secara real-time
-  socket.on("incrementScore", playerId => {
-    if (players[playerId]) {
-      players[playerId].score += 10; // Tambah 10 poin ke pemain
-      console.log(`Player ${playerId} score updated:`, players[playerId].score);
+  // socket.on("incrementScore", playerId => {
+  //   if (players[playerId]) {
+  //     players[playerId].score += 10; // Tambah 10 poin ke pemain
+  //     console.log(`Player ${playerId} score updated:`, players[playerId].score);
 
-      // Kirim pembaruan skor ke semua klien
-      io.emit("scoreUpdate", players);
-    }
-  });
+  //     // Kirim pembaruan skor ke semua klien
+  //     io.emit("scoreUpdate", players);
+  //   }
+  // });
 
   // Event untuk menerima jawaban pemain dan mengupdate skor
   socket.on("message:new", ({ answer, currentWord }) => {
     let correct = false;
     if (answer === currentWord) {
-      correct = true;
+      // correct = true;
       players[socket.id].correct = true;
       players[socket.id].score += 20; // Misal tambahkan 50 poin untuk jawaban benar
       io.emit("scoreUpdate", players); // Kirim pembaruan skor
