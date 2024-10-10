@@ -36,6 +36,14 @@ io.on("connection", socket => {
 
     // Broadcast pemain yang sudah bergabung kepada semua klien
     io.emit("updatePlayers", players);
+
+    if (status === "playing") {
+      socket.emit("startGame", { players: players });
+      socket.emit("next", {
+        players: players,
+        drawer: players[Object.keys(players)[drawerIndex]],
+      });
+    }
   });
 
   // Event player ready
@@ -94,35 +102,79 @@ io.on("connection", socket => {
   socket.on("word:chosen", word => {
     io.emit("word:update", word);
   });
+  // Event untuk mengatur kata yang akan ditebak
 
   // Event untuk memperbarui skor pemain secara real-time
-  socket.on("incrementScore", playerId => {
-    if (players[playerId]) {
-      players[playerId].score += 10; // Tambah 10 poin ke pemain
-      console.log(`Player ${playerId} score updated:`, players[playerId].score);
+  // socket.on("incrementScore", playerId => {
+  //   if (players[playerId]) {
+  //     players[playerId].score += 10; // Tambah 10 poin ke pemain
+  //     console.log(`Player ${playerId} score updated:`, players[playerId].score);
 
-      // Kirim pembaruan skor ke semua klien
-      io.emit("scoreUpdate", players);
-    }
-  });
+  //     // Kirim pembaruan skor ke semua klien
+  //     io.emit("scoreUpdate", players);
+  //   }
+  // });
 
   // Event untuk menerima jawaban pemain dan mengupdate skor
-  socket.on("message:new", ({ answer, currentWord }) => {
-    let correct = false;
-    if (answer === currentWord) {
-      correct = true;
-      players[socket.id].correct = true;
-      players[socket.id].score += 20; // Misal tambahkan 50 poin untuk jawaban benar
-      io.emit("scoreUpdate", players); // Kirim pembaruan skor
-    }
+  // socket.on("message:new", ({ answer, currentWord }) => {
+  //   let correct = false;
+  //   if (answer === currentWord) {
+  //     // Set player correct
+  //     players[socket.id].correct = true;
+  //     players[socket.id].score += 50; // Misal tambahkan 20 poin untuk jawaban benar
 
-    io.emit("message:update", {
-      username: players[socket.id].name,
-      score: players[socket.id].score,
-      avatar: players[socket.id].avatar,
-      message: answer,
-      correct,
-    });
+  //     // Emit pembaruan skor ke semua klien
+  //     io.emit("scoreUpdate", players);
+
+  //     // Cek apakah pemain mencapai skor 100
+  //     if (players[socket.id].score >= 100) {
+  //       // Emit event gameOver ke semua pemain
+  //       io.emit("gameOver", { winner: players[socket.id] });
+
+  //       // Reset permainan
+  //       resetGame();
+  //       return;
+  //     }
+  //   }
+
+  //   io.emit("message:update", {
+  //     username: players[socket.id].name,
+  //     score: players[socket.id].score,
+  //     avatar: players[socket.id].avatar,
+  //     message: answer,
+  //     correct,
+  //   });
+  // });
+
+  socket.on("message:new", ({ answer, currentWord }) => {
+    const player = players[socket.id];
+    console.log("Current players:", players);
+
+    if (player) {
+      let correct = false;
+      if (answer === currentWord) {
+        player.correct = true;
+        player.score += 50;
+
+        io.emit("scoreUpdate", players);
+
+        if (player.score >= 100) {
+          io.emit("gameOver", { winner: player });
+          resetGame();
+          return;
+        }
+      }
+
+      io.emit("message:update", {
+        username: player.name,
+        score: player.score,
+        avatar: player.avatar,
+        message: answer,
+        correct,
+      });
+    } else {
+      console.log(`Player not found for socket id: ${socket.id}`);
+    }
   });
 
   socket.on("drawing:data", data => {
@@ -162,6 +214,23 @@ function removePlayer(socket, id) {
   if (allPlayersReady()) {
     io.emit("start", { players: players });
   }
+}
+
+// Fungsi untuk reset game setelah pemain mencapai skor maksimal
+function resetGame() {
+  status = "waiting"; // Mengembalikan status ke 'waiting'
+  rounds = 0;
+  drawerIndex = 0;
+
+  // Reset skor dan status correct semua pemain
+  Object.values(players).forEach(player => {
+    player.correct = false;
+    player.score = 0; // Reset skor jika diperlukan
+    player.ready = false; // Reset status siap
+  });
+
+  // Emit updatePlayers ke semua klien untuk memperbarui status pemain
+  io.emit("updatePlayers", players);
 }
 
 // Memulai server pada port yang ditentukan

@@ -10,7 +10,6 @@ import Banner from "../assets/banner.png";
 import Background from "../assets/bg-repeat.png";
 
 export default function GamePage({ socket }) {
-  // const [timerIsActive, setTimerIsActive] = useState(false);
   const [seconds, setSeconds] = useState(30);
   const [currentWord, setCurrentWord] = useState("");
   const [players, setPlayers] = useState({});
@@ -109,9 +108,10 @@ export default function GamePage({ socket }) {
   ];
 
   // Pilih kata secara acak dan kirim ke server
-  const randomWord = words[Math.floor(Math.random() * words.length)];
+  const getRandomWord = () => words[Math.floor(Math.random() * words.length)];
 
   useEffect(() => {
+    const randomWord = getRandomWord();
     setCurrentWord(randomWord);
 
     // Mengirim kata ke semua klien yang terhubung
@@ -132,14 +132,23 @@ export default function GamePage({ socket }) {
   }, [socket]);
 
   useEffect(() => {
+    // Atur ulang kata dan timer setiap kali waktu habis
     if (seconds === 0) {
-      setSeconds(30);
+      const randomWord = getRandomWord();
       setCurrentWord(randomWord);
+      setSeconds(30); // Reset the timer to 30
 
-      // Mengirim kata ke semua klien yang terhubung
+      // Mengirim kata baru ke semua klien yang terhubung
       socket.emit("word:chosen", randomWord);
     }
-  }, [socket, words, seconds]);
+  }, [seconds, socket]);
+
+  // Ini akan mencegah timer stuck di -1
+  useEffect(() => {
+    if (seconds < 0) {
+      setSeconds(30); // Reset to 30 if it goes negative
+    }
+  }, [seconds]);
 
   useEffect(() => {
     socket.emit("players", players);
@@ -163,15 +172,8 @@ export default function GamePage({ socket }) {
           </div>
           <div className="flex flex-col md:flex-row">
             <div className="mt-4 md:mt-0">
-              <DrawingBoard socket={socket} seconds={seconds} setSeconds={setSeconds} />
+              <DrawingBoard socket={socket} seconds={seconds} setSeconds={setSeconds} players={players} />
             </div>
-            {/* <div className="text-center mr-0 md:mr-1 mt-5">
-              <Timer
-                socket={socket}
-                seconds={seconds}
-                setSeconds={setSeconds}
-              />
-            </div> */}
           </div>
         </div>
         <Chat socket={socket} players={players} />
