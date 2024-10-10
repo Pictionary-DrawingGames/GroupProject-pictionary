@@ -8,8 +8,10 @@ import RevealWord from "../components/RevealWord";
 
 import Banner from "../assets/banner.png";
 import Background from "../assets/bg-repeat.png";
+import { themeContext } from "../context/themeContext.jsx";
 
 export default function GamePage({ socket }) {
+  const { currentTheme, theme, setCurrentTheme } = useContext(themeContext);
   const [seconds, setSeconds] = useState(30);
   const [currentWord, setCurrentWord] = useState("");
   const [players, setPlayers] = useState({});
@@ -77,12 +79,29 @@ export default function GamePage({ socket }) {
     <div
       className="flex flex-col lg:flex-row items-center lg:items-start justify-between"
       style={{
-        backgroundImage: `url(${Background})`,
-        backgroundColor: "#f97316",
+        backgroundImage: theme[currentTheme]?.bgImage, // Set background image
+        backgroundColor: theme[currentTheme]?.bgColor,
       }}
     >
       <Players socket={socket} players={players} />
       <div className="flex flex-col items-center gap-y-2 w-full lg:w-[440px] h-full p-4">
+        {/* USE CONTEXT */}
+        {currentTheme == "male" ? (
+          <button
+            className="bg-white p-5"
+            onClick={() => setCurrentTheme("female")}
+          >
+            THEME FEMALE
+          </button>
+        ) : (
+          <button
+            className="bg-white p-5"
+            onClick={() => setCurrentTheme("male")}
+          >
+            THEME MALE
+          </button>
+        )}
+        {/* USE CONTEXT */}
         <div className="flex flex-col items-center gap-y-2 mb-8">
           <img src={Banner} alt="" className="w-[200px] md:w-[300px]" />
           <p className="font-black rounded-xl bg-orange-950 p-2 text-white text-lg md:text-xl text-center">

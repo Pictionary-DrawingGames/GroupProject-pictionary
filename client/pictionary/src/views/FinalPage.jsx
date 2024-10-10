@@ -1,15 +1,17 @@
 import Banner from "../assets/banner.png";
 import Background from "../assets/bg-repeat.png";
 import Avatars from "../assets/avatars/0.png";
+import { themeContext } from "../context/themeContext.jsx";
 
 export default function FinalPage() {
+  const { currentTheme, theme } = useContext(themeContext);
   return (
     <>
       <div
         className="flex flex-col items-center h-screen"
         style={{
-          backgroundImage: `url(${Background})`,
-          backgroundColor: "#f97316",
+          backgroundImage: theme[currentTheme]?.bgImage, // Set background image
+          backgroundColor: theme[currentTheme]?.bgColor,
         }}
       >
         <div className="flex flex-col items-center gap-y-2 mb-4">
